@@ -13,6 +13,7 @@ CREATE TABLE entidades (
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+ALTER TABLE entidades MODIFY logo MEDIUMTEXT NULL;
 
 -- Tabla de clientes
 CREATE TABLE clientes (

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -27,6 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link"
+import { apiVehiculos } from "@/lib/api"
 
 // Datos de ejemplo para vehículos
 const vehiculosData = [
@@ -117,50 +118,70 @@ const vehiculosData = [
   },
 ]
 
-export default function VehiculosPage() {
-  const [vehiculos, setVehiculos] = useState(vehiculosData)
-  const [busqueda, setBusqueda] = useState("")
-  const [filtroMarca, setFiltroMarca] = useState("todas")
-  const [filtroCliente, setFiltroCliente] = useState("todos")
-  const [ordenamiento, setOrdenamiento] = useState("placa")
+interface Vehiculo {
+  id: number;
+  cliente_id: number;
+  marca: string;
+  modelo: string;
+  anio: number | string;
+  placa: string;
+  color: string;
+  vin?: string;
+  motor?: string;
+  combustible: string;
+  transmision: string;
+  kilometraje: number | string;
+  estado: string;
+  fechaRegistro?: string;
+}
 
-  // Obtener marcas y clientes únicos
-  const marcas = Array.from(new Set(vehiculos.map((v) => v.marca)))
-  const clientes = Array.from(new Set(vehiculos.map((v) => ({ id: v.clienteId, nombre: v.clienteNombre }))))
+export default function VehiculosPage() {
+  const [vehiculos, setVehiculos] = useState<Vehiculo[]>([])
+  const [busqueda, setBusqueda] = useState("")
+  const [filtroEstado, setFiltroEstado] = useState("todos")
+  const [ordenamiento, setOrdenamiento] = useState("placa")
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchVehiculos = async () => {
+      setLoading(true)
+      try {
+        const data = await apiVehiculos.list()
+        setVehiculos(Array.isArray(data) ? data : [])
+      } catch {
+        setVehiculos([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchVehiculos()
+  }, [])
+
+  const eliminarVehiculo = async (id: number) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este vehículo?")) return
+    await apiVehiculos.delete(id)
+    setVehiculos(vehiculos.filter((v) => v.id !== id))
+  }
 
   // Filtrar y ordenar vehículos
   const vehiculosFiltrados = vehiculos
     .filter((vehiculo) => {
       const coincideBusqueda =
-        vehiculo.placa.toLowerCase().includes(busqueda.toLowerCase()) ||
-        vehiculo.marca.toLowerCase().includes(busqueda.toLowerCase()) ||
-        vehiculo.modelo.toLowerCase().includes(busqueda.toLowerCase()) ||
-        vehiculo.clienteNombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-        vehiculo.vin.toLowerCase().includes(busqueda.toLowerCase())
-
-      const coincideMarca = filtroMarca === "todas" || vehiculo.marca === filtroMarca
-      const coincideCliente = filtroCliente === "todos" || vehiculo.clienteId.toString() === filtroCliente
-
-      return coincideBusqueda && coincideMarca && coincideCliente
+        (vehiculo.marca?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
+        (vehiculo.modelo?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
+        (vehiculo.placa || "").includes(busqueda) ||
+        (vehiculo.color?.toLowerCase() || "").includes(busqueda.toLowerCase())
+      const coincideEstado = filtroEstado === "todos" || vehiculo.estado === filtroEstado
+      return coincideBusqueda && coincideEstado
     })
     .sort((a, b) => {
       switch (ordenamiento) {
         case "placa":
           return a.placa.localeCompare(b.placa)
-        case "marca":
-          return a.marca.localeCompare(b.marca)
-        case "anio":
-          return Number(b.anio) - Number(a.anio)
-        case "cliente":
-          return a.clienteNombre.localeCompare(b.clienteNombre)
         default:
           return 0
       }
     })
-
-  const eliminarVehiculo = (id: number) => {
-    setVehiculos(vehiculos.filter((vehiculo) => vehiculo.id !== id))
-  }
 
   return (
     <div className="container py-10">
@@ -180,42 +201,32 @@ export default function VehiculosPage() {
         </Link>
       </div>
 
+      <div className="mb-4">
+        <Link href="/">
+          <Button variant="outline">Regresar</Button>
+        </Link>
+      </div>
+
       {/* Filtros y búsqueda */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Buscar por placa, marca, modelo, cliente o VIN..."
+            placeholder="Buscar por placa, marca, modelo o color..."
             className="pl-8"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
         </div>
-        <Select value={filtroMarca} onValueChange={setFiltroMarca}>
+        <Select value={filtroEstado} onValueChange={setFiltroEstado}>
           <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder="Marca" />
+            <SelectValue placeholder="Estado" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="todas">Todas las marcas</SelectItem>
-            {marcas.map((marca) => (
-              <SelectItem key={marca} value={marca}>
-                {marca}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={filtroCliente} onValueChange={setFiltroCliente}>
-          <SelectTrigger className="w-full md:w-[200px]">
-            <SelectValue placeholder="Cliente" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos los clientes</SelectItem>
-            {clientes.map((cliente) => (
-              <SelectItem key={cliente.id} value={cliente.id.toString()}>
-                {cliente.nombre}
-              </SelectItem>
-            ))}
+            <SelectItem value="todos">Todos los estados</SelectItem>
+            <SelectItem value="activo">Activos</SelectItem>
+            <SelectItem value="inactivo">Inactivos</SelectItem>
           </SelectContent>
         </Select>
         <Select value={ordenamiento} onValueChange={setOrdenamiento}>

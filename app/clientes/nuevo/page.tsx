@@ -11,6 +11,7 @@ import { ArrowLeft, Save, Users } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { apiClientes } from "@/lib/api"
 
 interface ClienteData {
   nombre: string
@@ -68,15 +69,9 @@ export default function NuevoClientePage() {
     if (!validarFormulario()) {
       return
     }
-
     setLoading(true)
     try {
-      // Simular guardado en base de datos
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      console.log("Datos del cliente:", formData)
-
-      // Redirigir a la lista de clientes
+      await apiClientes.create(formData)
       router.push("/clientes")
     } catch (error) {
       console.error("Error al guardar el cliente:", error)

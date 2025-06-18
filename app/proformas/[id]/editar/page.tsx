@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,183 +14,7 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { useRouter, useParams } from "next/navigation"
-
-// Datos de ejemplo (mismos que en nueva proforma)
-const clientes = [
-  {
-    id: 1,
-    nombre: "Juan Pérez García",
-    ruc: "1234567890001",
-    direccion: "Av. Principal 123, Quito",
-    telefono: "+593 99 123-4567",
-    email: "juan.perez@email.com",
-  },
-  {
-    id: 2,
-    nombre: "María López Sánchez",
-    ruc: "9876543210001",
-    direccion: "Calle Secundaria 456, Guayaquil",
-    telefono: "+593 98 765-4321",
-    email: "maria.lopez@email.com",
-  },
-  {
-    id: 3,
-    nombre: "Carlos Ruiz Mendoza",
-    ruc: "5678901234001",
-    direccion: "Av. Amazonas 789, Cuenca",
-    telefono: "+593 97 555-1234",
-    email: "carlos.ruiz@email.com",
-  },
-]
-
-const vehiculos = [
-  { id: 1, clienteId: 1, marca: "Toyota", modelo: "Corolla", anio: "2018", placa: "ABC-123", color: "Blanco" },
-  { id: 2, clienteId: 1, marca: "Nissan", modelo: "Sentra", anio: "2020", placa: "DEF-456", color: "Gris" },
-  { id: 3, clienteId: 2, marca: "Chevrolet", modelo: "Aveo", anio: "2019", placa: "GHI-789", color: "Rojo" },
-  { id: 4, clienteId: 3, marca: "Kia", modelo: "Sportage", anio: "2021", placa: "JKL-012", color: "Negro" },
-  { id: 5, clienteId: 2, marca: "Hyundai", modelo: "Accent", anio: "2022", placa: "MNO-345", color: "Azul" },
-]
-
-const repuestos = [
-  {
-    id: 1,
-    codigo: "REP001",
-    descripcion: "Filtro de aceite Toyota Original",
-    precio: 12.5,
-    precioIva: 14.0,
-    stock: 25,
-    categoria: "Filtros",
-  },
-  {
-    id: 2,
-    codigo: "REP002",
-    descripcion: "Pastillas de freno delanteras",
-    precio: 45.0,
-    precioIva: 50.4,
-    stock: 15,
-    categoria: "Frenos",
-  },
-  {
-    id: 3,
-    codigo: "REP003",
-    descripcion: "Amortiguador trasero",
-    precio: 85.0,
-    precioIva: 95.2,
-    stock: 8,
-    categoria: "Suspensión",
-  },
-  {
-    id: 4,
-    codigo: "REP004",
-    descripcion: "Batería 12V 60Ah",
-    precio: 120.0,
-    precioIva: 134.4,
-    stock: 12,
-    categoria: "Eléctrico",
-  },
-  {
-    id: 5,
-    codigo: "REP005",
-    descripcion: "Kit de distribución completo",
-    precio: 180.0,
-    precioIva: 201.6,
-    stock: 5,
-    categoria: "Motor",
-  },
-  {
-    id: 6,
-    codigo: "REP006",
-    descripcion: "Aceite motor 5W-30 (4 litros)",
-    precio: 28.0,
-    precioIva: 31.36,
-    stock: 30,
-    categoria: "Lubricantes",
-  },
-  {
-    id: 7,
-    codigo: "REP007",
-    descripcion: "Filtro de aire",
-    precio: 15.75,
-    precioIva: 17.64,
-    stock: 20,
-    categoria: "Filtros",
-  },
-  {
-    id: 8,
-    codigo: "REP008",
-    descripcion: "Bujías NGK (set 4 unidades)",
-    precio: 32.0,
-    precioIva: 35.84,
-    stock: 18,
-    categoria: "Motor",
-  },
-  {
-    id: 9,
-    codigo: "SER001",
-    descripcion: "Mano de obra - Mantenimiento básico",
-    precio: 35.0,
-    precioIva: 39.2,
-    stock: 999,
-    categoria: "Servicios",
-  },
-  {
-    id: 10,
-    codigo: "SER002",
-    descripcion: "Mano de obra - Cambio de frenos",
-    precio: 25.0,
-    precioIva: 28.0,
-    stock: 999,
-    categoria: "Servicios",
-  },
-]
-
-// Datos de ejemplo de la proforma existente
-const proformaExistente = {
-  id: 1,
-  numeroProforma: "PRO-2023-001",
-  fecha: "2023-05-15",
-  clienteId: "1",
-  vehiculoId: "1",
-  km: "45000",
-  descripcion: "Mantenimiento preventivo y cambio de repuestos",
-  items: [
-    {
-      id: 1,
-      repuestoId: 1,
-      codigo: "REP001",
-      descripcion: "Filtro de aceite Toyota Original",
-      cantidad: 1,
-      precioUnitario: 12.5,
-      precioTotal: 12.5,
-      stock: 25,
-      categoria: "Filtros",
-    },
-    {
-      id: 2,
-      repuestoId: 2,
-      codigo: "REP002",
-      descripcion: "Pastillas de freno delanteras",
-      cantidad: 1,
-      precioUnitario: 45.0,
-      precioTotal: 45.0,
-      stock: 15,
-      categoria: "Frenos",
-    },
-    {
-      id: 3,
-      repuestoId: 9,
-      codigo: "SER001",
-      descripcion: "Mano de obra - Mantenimiento básico",
-      cantidad: 1,
-      precioUnitario: 35.0,
-      precioTotal: 35.0,
-      stock: 999,
-      categoria: "Servicios",
-    },
-  ],
-  notaAviso: "Esta proforma tiene validez de 15 días a partir de la fecha de emisión.",
-  aviso: "Los precios incluyen IVA. Garantía de 30 días en repuestos y 15 días en mano de obra.",
-}
+import { apiProformas, apiClientes, apiVehiculos, apiProformaItems, apiRepuestos } from "@/lib/api"
 
 interface ProformaItem {
   id: number
@@ -219,13 +43,66 @@ interface ProformaData {
 export default function EditarProformaPage() {
   const router = useRouter()
   const params = useParams()
-  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState<any>(null)
+  const [clientes, setClientes] = useState<any[]>([])
+  const [vehiculos, setVehiculos] = useState<any[]>([])
+  const [items, setItems] = useState<any[]>([])
+  const [repuestos, setRepuestos] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [vehiculosFiltrados, setVehiculosFiltrados] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const id = Array.isArray(params.id) ? params.id[0] : params.id
+        if (!id) {
+          setError("ID de proforma no válido")
+          setLoading(false)
+          return
+        }
+        const proforma = await apiProformas.get(id)
+        setFormData({
+          numeroProforma: proforma.numeroProforma ?? proforma.numero ?? "",
+          fecha: proforma.fecha ?? "",
+          clienteId: proforma.clienteId?.toString() ?? proforma.cliente_id?.toString() ?? "",
+          vehiculoId: proforma.vehiculoId?.toString() ?? proforma.vehiculo_id?.toString() ?? "",
+          km: proforma.km ?? proforma.kilometraje ?? "",
+          descripcion: proforma.descripcion ?? "",
+          notaAviso: proforma.notaAviso ?? proforma.nota_aviso ?? "",
+          aviso: proforma.aviso ?? "",
+          items: [], // items se maneja por separado
+        })
+        setClientes(await apiClientes.list())
+        setVehiculos(await apiVehiculos.list())
+        setRepuestos(await apiRepuestos.list())
+        // Cargar items y mapear campos del backend al frontend
+        const itemsApi = await apiProformaItems.list(id)
+        setItems(
+          itemsApi.map((item: any) => ({
+            id: item.id,
+            repuestoId: item.repuesto_id,
+            codigo: item.codigo,
+            descripcion: item.descripcion,
+            cantidad: Number(item.cantidad),
+            precioUnitario: Number(item.precio_unitario),
+            precioTotal: Number(item.cantidad) * Number(item.precio_unitario),
+            stock: item.stock ?? 0,
+            categoria: item.categoria ?? "",
+          }))
+        )
+      } catch (e: any) {
+        setError("No se pudo cargar la proforma")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [params.id])
 
   // Estados del formulario - inicializar con datos existentes
-  const [formData, setFormData] = useState<ProformaData>(proformaExistente)
-
-  const [vehiculosFiltrados, setVehiculosFiltrados] = useState(vehiculos)
   const [clienteSeleccionado, setClienteSeleccionado] = useState<any>(null)
   const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState<any>(null)
 
@@ -236,57 +113,70 @@ export default function EditarProformaPage() {
   const [repuestosFiltrados, setRepuestosFiltrados] = useState<any[]>([])
   const [mostrarLista, setMostrarLista] = useState(false)
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales y sincronizar vehículos al cambiar cliente
   useEffect(() => {
     // Cargar cliente seleccionado
-    const cliente = clientes.find((c) => c.id.toString() === formData.clienteId)
+    const cliente = clientes.find((c) => c.id.toString() === formData?.clienteId)
     setClienteSeleccionado(cliente)
 
-    // Filtrar vehículos por cliente
-    if (formData.clienteId) {
-      const clienteId = Number.parseInt(formData.clienteId)
-      const filtrados = vehiculos.filter((v) => v.clienteId === clienteId)
+    // Filtrar vehículos por cliente (ambos campos)
+    if (formData?.clienteId) {
+      const clienteId = Number(formData.clienteId)
+      const filtrados = vehiculos.filter(
+        (v) => v.clienteId?.toString() === clienteId.toString() || v.cliente_id?.toString() === clienteId.toString()
+      )
       setVehiculosFiltrados(filtrados)
 
-      // Cargar vehículo seleccionado
-      const vehiculo = filtrados.find((v) => v.id.toString() === formData.vehiculoId)
-      setVehiculoSeleccionado(vehiculo)
+      // Buscar el vehículo seleccionado en toda la lista de vehículos
+      const vehiculo = vehiculos.find(
+        (v) => v.id?.toString() === formData.vehiculoId || v.vehiculoId?.toString() === formData.vehiculoId || v.vehiculo_id?.toString() === formData.vehiculoId
+      )
+      setVehiculoSeleccionado(vehiculo || null)
+      // Si el vehículo no pertenece al nuevo cliente, límpialo
+      if (
+        vehiculo &&
+        !(
+          vehiculo.clienteId?.toString() === clienteId.toString() ||
+          vehiculo.cliente_id?.toString() === clienteId.toString()
+        )
+      ) {
+        setVehiculoSeleccionado(null)
+        setFormData((prev: typeof formData) => ({ ...prev, vehiculoId: "" }))
+      }
+    } else {
+      setVehiculosFiltrados([])
+      setVehiculoSeleccionado(null)
+      setFormData((prev: typeof formData) => ({ ...prev, vehiculoId: "" }))
     }
-  }, [formData.clienteId, formData.vehiculoId])
+  }, [formData?.clienteId, formData?.vehiculoId, clientes, vehiculos])
 
-  // Calcular totales
-  const subtotal = formData.items.reduce((sum, item) => sum + item.precioTotal, 0)
+  // Calcular totales y unidades a partir de items
+  const subtotal = items.reduce(
+    (sum: number, item: any) => sum + Number(item.precioUnitario ?? item.precio_unitario ?? 0) * Number(item.cantidad ?? 0),
+    0,
+  )
   const iva = subtotal * 0.12
   const total = subtotal + iva
+  const unidades = items.reduce((sum: number, item: any) => sum + Number(item.cantidad ?? 0), 0)
 
   // Manejar cambio de cliente
   const handleClienteChange = (value: string) => {
     const cliente = clientes.find((c) => c.id.toString() === value)
     setClienteSeleccionado(cliente)
-    setFormData((prev) => ({ ...prev, clienteId: value, vehiculoId: "" }))
+    setFormData((prev: typeof formData) => ({ ...prev, clienteId: value, vehiculoId: "" }))
     setVehiculoSeleccionado(null)
-
     // Filtrar vehículos por cliente
     const clienteId = Number.parseInt(value)
-    const filtrados = vehiculos.filter((v) => v.clienteId === clienteId)
+    const filtrados = vehiculos.filter((v) => v.clienteId === clienteId || v.cliente_id === clienteId)
     setVehiculosFiltrados(filtrados)
-
-    // Limpiar errores
-    if (errors.clienteId) {
-      setErrors((prev) => ({ ...prev, clienteId: "" }))
-    }
   }
 
   // Manejar cambio de vehículo
   const handleVehiculoChange = (value: string) => {
-    const vehiculo = vehiculosFiltrados.find((v) => v.id.toString() === value)
+    // Buscar en ambos posibles campos de id
+    const vehiculo = vehiculosFiltrados.find((v) => v.id?.toString() === value || v.vehiculoId?.toString() === value || v.vehiculo_id?.toString() === value)
     setVehiculoSeleccionado(vehiculo)
-    setFormData((prev) => ({ ...prev, vehiculoId: value }))
-
-    // Limpiar errores
-    if (errors.vehiculoId) {
-      setErrors((prev) => ({ ...prev, vehiculoId: "" }))
-    }
+    setFormData((prev: typeof formData) => ({ ...prev, vehiculoId: value }))
   }
 
   // Filtrar repuestos por búsqueda
@@ -297,9 +187,9 @@ export default function EditarProformaPage() {
     } else {
       const filtrados = repuestos.filter(
         (repuesto) =>
-          repuesto.codigo.toLowerCase().includes(busquedaRepuesto.toLowerCase()) ||
-          repuesto.descripcion.toLowerCase().includes(busquedaRepuesto.toLowerCase()) ||
-          repuesto.categoria.toLowerCase().includes(busquedaRepuesto.toLowerCase()),
+          (repuesto.codigo || "").toLowerCase().includes(busquedaRepuesto.toLowerCase()) ||
+          (repuesto.descripcion || "").toLowerCase().includes(busquedaRepuesto.toLowerCase()) ||
+          (repuesto.categoria || "").toLowerCase().includes(busquedaRepuesto.toLowerCase()),
       )
       setRepuestosFiltrados(filtrados)
       setMostrarLista(true)
@@ -334,7 +224,7 @@ export default function EditarProformaPage() {
     }
 
     // Verificar si el repuesto ya está en la lista
-    const existeItem = formData.items.find((item) => item.repuestoId === repuestoSeleccionado.id)
+    const existeItem = items.find((item) => item.repuestoId === repuestoSeleccionado.id)
     if (existeItem) {
       // Verificar que la nueva cantidad total no exceda el stock
       const nuevaCantidadTotal = existeItem.cantidad + cantidad
@@ -346,7 +236,7 @@ export default function EditarProformaPage() {
       }
 
       // Actualizar cantidad del item existente
-      const itemsActualizados = formData.items.map((item) =>
+      const itemsActualizados = items.map((item) =>
         item.repuestoId === repuestoSeleccionado.id
           ? {
               ...item,
@@ -355,7 +245,7 @@ export default function EditarProformaPage() {
             }
           : item,
       )
-      setFormData((prev) => ({ ...prev, items: itemsActualizados }))
+      setItems(itemsActualizados)
     } else {
       // Agregar nuevo item
       const precioTotal = repuestoSeleccionado.precio * cantidad
@@ -372,7 +262,7 @@ export default function EditarProformaPage() {
         categoria: repuestoSeleccionado.categoria,
       }
 
-      setFormData((prev) => ({ ...prev, items: [...prev.items, nuevoItem] }))
+      setItems((prev) => [...prev, nuevoItem])
     }
 
     // Limpiar selección
@@ -381,10 +271,7 @@ export default function EditarProformaPage() {
 
   // Eliminar item de la proforma
   const eliminarItem = (id: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      items: prev.items.filter((item) => item.id !== id),
-    }))
+    setItems((prev) => prev.filter((item) => item.id !== id))
   }
 
   // Actualizar cantidad de un item
@@ -394,13 +281,13 @@ export default function EditarProformaPage() {
       return
     }
 
-    const item = formData.items.find((i) => i.id === id)
+    const item = items.find((i) => i.id === id)
     if (item && nuevaCantidad > item.stock) {
       alert(`No hay suficiente stock. Stock disponible: ${item.stock}`)
       return
     }
 
-    const itemsActualizados = formData.items.map((item) =>
+    const itemsActualizados = items.map((item) =>
       item.id === id
         ? {
             ...item,
@@ -409,7 +296,7 @@ export default function EditarProformaPage() {
           }
         : item,
     )
-    setFormData((prev) => ({ ...prev, items: itemsActualizados }))
+    setItems(itemsActualizados)
   }
 
   // Validar formulario
@@ -428,7 +315,7 @@ export default function EditarProformaPage() {
     if (!formData.descripcion.trim()) {
       nuevosErrores.descripcion = "La descripción es requerida"
     }
-    if (formData.items.length === 0) {
+    if (items.length === 0) {
       nuevosErrores.items = "Debe agregar al menos un repuesto o servicio"
     }
 
@@ -444,23 +331,43 @@ export default function EditarProformaPage() {
 
     setLoading(true)
     try {
-      // Simular guardado en base de datos
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Aquí iría la lógica real para actualizar en la base de datos
-      console.log("Datos actualizados de la proforma:", {
-        ...formData,
-        subtotal,
-        iva,
-        total,
-        cliente: clienteSeleccionado,
-        vehiculo: vehiculoSeleccionado,
+      const id = Array.isArray(params.id) ? params.id[0] : params.id
+      // 1. Actualizar datos principales de la proforma
+      await apiProformas.update(id, {
+        numero: formData.numeroProforma,
+        fecha: formData.fecha,
+        cliente_id: formData.clienteId,
+        vehiculo_id: formData.vehiculoId,
+        kilometraje: formData.km,
+        descripcion: formData.descripcion,
+        subtotal: subtotal.toFixed(2),
+        iva: iva.toFixed(2),
+        total: total.toFixed(2),
+        nota_aviso: formData.notaAviso,
+        aviso: formData.aviso,
       })
-
+      // 2. Eliminar todos los items existentes y crear los nuevos
+      const itemsExistentes = await apiProformaItems.list(id)
+      // Eliminar todos los items existentes de forma secuencial
+      for (const item of itemsExistentes) {
+        await apiProformaItems.delete(item.id)
+      }
+      // Crear los nuevos items de forma secuencial
+      for (const item of items.filter((item: any) => item.repuestoId)) {
+        await apiProformaItems.create({
+          proforma_id: id,
+          repuesto_id: item.repuestoId,
+          cantidad: item.cantidad,
+          precio_unitario: item.precioUnitario,
+          codigo: item.codigo,
+          descripcion: item.descripcion,
+        })
+      }
       // Redirigir a la vista de la proforma
-      router.push(`/proformas/${params.id}`)
+      router.push(`/proformas/${id}`)
     } catch (error) {
       console.error("Error al actualizar la proforma:", error)
+      setError("No se pudo guardar la proforma. Intente nuevamente.")
     } finally {
       setLoading(false)
     }
@@ -477,7 +384,7 @@ export default function EditarProformaPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Edit className="h-8 w-8" />
-            Editar Proforma {formData.numeroProforma}
+            Editar Proforma {formData?.numeroProforma}
           </h1>
           <p className="text-muted-foreground">Modificar los datos de la proforma existente</p>
         </div>
@@ -510,8 +417,8 @@ export default function EditarProformaPage() {
                   <Label htmlFor="numero">Número de Proforma *</Label>
                   <Input
                     id="numero"
-                    value={formData.numeroProforma}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, numeroProforma: e.target.value }))}
+                    value={formData?.numeroProforma ?? ""}
+                    onChange={(e) => setFormData((prev: typeof formData) => ({ ...prev, numeroProforma: e.target.value }))}
                     className={errors.numeroProforma ? "border-red-500" : ""}
                   />
                   {errors.numeroProforma && <p className="text-sm text-red-500">{errors.numeroProforma}</p>}
@@ -521,8 +428,8 @@ export default function EditarProformaPage() {
                   <Input
                     id="fecha"
                     type="date"
-                    value={formData.fecha}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, fecha: e.target.value }))}
+                    value={formData?.fecha ?? ""}
+                    onChange={(e) => setFormData((prev: typeof formData) => ({ ...prev, fecha: e.target.value }))}
                   />
                 </div>
               </div>
@@ -539,7 +446,7 @@ export default function EditarProformaPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="cliente">Cliente *</Label>
-                  <Select value={formData.clienteId} onValueChange={handleClienteChange}>
+                  <Select value={formData?.clienteId} onValueChange={handleClienteChange}>
                     <SelectTrigger className={errors.clienteId ? "border-red-500" : ""}>
                       <SelectValue placeholder="Seleccionar cliente" />
                     </SelectTrigger>
@@ -575,9 +482,9 @@ export default function EditarProformaPage() {
                 <div className="space-y-2">
                   <Label htmlFor="vehiculo">Vehículo *</Label>
                   <Select
-                    value={formData.vehiculoId}
+                    value={formData?.vehiculoId}
                     onValueChange={handleVehiculoChange}
-                    disabled={!formData.clienteId}
+                    disabled={!formData?.clienteId}
                   >
                     <SelectTrigger className={errors.vehiculoId ? "border-red-500" : ""}>
                       <SelectValue placeholder="Seleccionar vehículo" />
@@ -625,8 +532,8 @@ export default function EditarProformaPage() {
                   <Input
                     id="km"
                     placeholder="45,000"
-                    value={formData.km}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, km: e.target.value }))}
+                    value={formData?.km ?? ""}
+                    onChange={(e) => setFormData((prev: typeof formData) => ({ ...prev, km: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
@@ -634,8 +541,8 @@ export default function EditarProformaPage() {
                   <Input
                     id="descripcion"
                     placeholder="Mantenimiento preventivo"
-                    value={formData.descripcion}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, descripcion: e.target.value }))}
+                    value={formData?.descripcion ?? ""}
+                    onChange={(e) => setFormData((prev: typeof formData) => ({ ...prev, descripcion: e.target.value }))}
                     className={errors.descripcion ? "border-red-500" : ""}
                   />
                   {errors.descripcion && <p className="text-sm text-red-500">{errors.descripcion}</p>}
@@ -700,7 +607,7 @@ export default function EditarProformaPage() {
                                 <p className="text-sm text-gray-600">{repuesto.descripcion}</p>
                               </div>
                               <div className="text-right ml-2">
-                                <p className="font-medium text-sm">${repuesto.precio.toFixed(2)}</p>
+                                <p className="font-medium text-sm">${Number(repuesto.precio).toFixed(2)}</p>
                                 <Badge
                                   variant={
                                     repuesto.stock > 10 ? "default" : repuesto.stock > 0 ? "secondary" : "destructive"
@@ -763,10 +670,9 @@ export default function EditarProformaPage() {
                         <p className="text-sm text-gray-600">{repuestoSeleccionado.descripcion}</p>
                       </div>
                       <div className="text-right ml-4">
-                        <p className="font-medium">${repuestoSeleccionado.precio.toFixed(2)}</p>
-                        <p className="text-sm text-gray-600">Stock: {repuestoSeleccionado.stock}</p>
+                        <p className="font-medium">${Number(repuestoSeleccionado.precio).toFixed(2)}</p>
                         <p className="text-sm font-medium text-blue-600">
-                          Total: ${(repuestoSeleccionado.precio * cantidad).toFixed(2)}
+                          Total: ${(Number(repuestoSeleccionado.precio) * cantidad).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -781,7 +687,7 @@ export default function EditarProformaPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calculator className="h-5 w-5" />
-                Detalle de la Proforma ({formData.items.length} items)
+                Detalle de la Proforma ({items.length} items)
               </CardTitle>
               <CardDescription>
                 Items agregados a la proforma
@@ -802,57 +708,31 @@ export default function EditarProformaPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {formData.items.length === 0 ? (
+                    {items.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                          No hay repuestos agregados a la proforma
-                          <br />
-                          <span className="text-sm">Usa el buscador de arriba para agregar repuestos</span>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          No hay items registrados en esta proforma
                         </TableCell>
                       </TableRow>
                     ) : (
-                      formData.items.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-mono text-sm">{item.codigo}</TableCell>
-                          <TableCell>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium">{item.descripcion}</p>
-                                <Badge variant="outline" className="text-xs">
-                                  {item.categoria}
-                                </Badge>
-                              </div>
-                              {item.stock <= 5 && (
-                                <Badge variant="destructive" className="text-xs mt-1">
-                                  Stock bajo: {item.stock}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Input
-                              type="number"
-                              min="1"
-                              max={item.stock}
-                              value={item.cantidad}
-                              onChange={(e) => actualizarCantidad(item.id, Number.parseInt(e.target.value) || 0)}
-                              className="w-20 text-center"
-                            />
-                          </TableCell>
-                          <TableCell className="text-right">${item.precioUnitario.toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-medium">${item.precioTotal.toFixed(2)}</TableCell>
-                          <TableCell className="text-center">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => eliminarItem(item.id)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
+                      items.map((item: any, index: number) => {
+                        const repuesto = repuestos.find((r) => r.id === (item.repuestoId ?? item.repuesto_id))
+                        return (
+                          <TableRow key={index}>
+                            <TableCell className="font-mono text-sm">
+                              {repuesto?.codigo || item.codigo || item.repuestoId || item.repuesto_id}
+                            </TableCell>
+                            <TableCell>{repuesto?.descripcion || item.descripcion || "-"}</TableCell>
+                            <TableCell className="text-right">{item.cantidad}</TableCell>
+                            <TableCell className="text-right">
+                              ${Number(item.precioUnitario ?? item.precio_unitario ?? 0).toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              ${Number((item.cantidad ?? 0) * (item.precioUnitario ?? item.precio_unitario ?? 0)).toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })
                     )}
                   </TableBody>
                 </Table>
@@ -874,8 +754,8 @@ export default function EditarProformaPage() {
                     id="nota"
                     placeholder="Información importante para el cliente"
                     rows={3}
-                    value={formData.notaAviso}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, notaAviso: e.target.value }))}
+                    value={formData?.notaAviso}
+                    onChange={(e) => setFormData((prev: typeof formData) => ({ ...prev, notaAviso: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
@@ -884,8 +764,8 @@ export default function EditarProformaPage() {
                     id="aviso"
                     placeholder="Términos y condiciones de la proforma"
                     rows={3}
-                    value={formData.aviso}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, aviso: e.target.value }))}
+                    value={formData?.aviso}
+                    onChange={(e) => setFormData((prev: typeof formData) => ({ ...prev, aviso: e.target.value }))}
                   />
                 </div>
               </div>
@@ -904,30 +784,34 @@ export default function EditarProformaPage() {
               <div className="space-y-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Items:</span>
-                  <span>{formData.items.length}</span>
+                  <span>{items.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Unidades:</span>
-                  <span>{formData.items.reduce((sum, item) => sum + item.cantidad, 0)}</span>
+                  <span>{unidades}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Descuento:</span>
+                  <span>- ${Number(formData?.descuento || 0).toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal:</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>${Number(subtotal).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">IVA (12%):</span>
-                  <span>${iva.toFixed(2)}</span>
+                  <span>${Number(iva).toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total:</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>${Number(total).toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-2">
-              <Button className="w-full" onClick={guardarCambios} disabled={loading || formData.items.length === 0}>
+              <Button className="w-full" onClick={guardarCambios} disabled={loading || items.length === 0}>
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>

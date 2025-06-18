@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -27,87 +27,82 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link"
+import { apiEntidades } from "@/lib/api"
 
-// Datos de ejemplo para entidades
-const entidadesData = [
-  {
-    id: 1,
-    nombre: "AutoRepuestos El Mecánico",
-    propietario: "Carlos Mendoza",
-    ruc: "1291790642001",
-    direccion: "Av. Principal 123, Quito, Ecuador",
-    telefono: "+593 2 234-5678",
-    email: "info@autorepuestos.com",
-    tipo: "matriz",
-    estado: "activo",
-    fechaRegistro: "2020-01-15",
-    logo: null,
-  },
-  {
-    id: 2,
-    nombre: "AutoRepuestos El Mecánico - Sucursal Norte",
-    propietario: "Carlos Mendoza",
-    ruc: "1291790642001",
-    direccion: "Av. Eloy Alfaro 456, Quito, Ecuador",
-    telefono: "+593 2 345-6789",
-    email: "norte@autorepuestos.com",
-    tipo: "sucursal",
-    estado: "activo",
-    fechaRegistro: "2021-06-20",
-    logo: null,
-  },
-  {
-    id: 3,
-    nombre: "AutoRepuestos El Mecánico - Sucursal Sur",
-    propietario: "Carlos Mendoza",
-    ruc: "1291790642001",
-    direccion: "Av. Maldonado 789, Quito, Ecuador",
-    telefono: "+593 2 456-7890",
-    email: "sur@autorepuestos.com",
-    tipo: "sucursal",
-    estado: "inactivo",
-    fechaRegistro: "2022-03-10",
-    logo: null,
-  },
-]
-
-function getStatusColor(status: string) {
-  switch (status) {
-    case "activo":
-      return "bg-green-100 text-green-800 hover:bg-green-100"
-    case "inactivo":
-      return "bg-red-100 text-red-800 hover:bg-red-100"
-    default:
-      return "bg-gray-100 text-gray-800 hover:bg-gray-100"
-  }
-}
-
-function getTipoColor(tipo: string) {
-  switch (tipo) {
-    case "matriz":
-      return "bg-blue-100 text-blue-800 hover:bg-blue-100"
-    case "sucursal":
-      return "bg-purple-100 text-purple-800 hover:bg-purple-100"
-    default:
-      return "bg-gray-100 text-gray-800 hover:bg-gray-100"
-  }
-}
-
+// Eliminar datos simulados y conectar al backend
 export default function EntidadesPage() {
-  const [entidades, setEntidades] = useState(entidadesData)
+  interface Entidad {
+    id: number;
+    nombre: string;
+    propietario: string;
+    ruc: string;
+    direccion: string;
+    telefono: string;
+    email: string;
+    tipo: string;
+    estado: string;
+    fechaRegistro?: string;
+    logo?: string | null;
+  }
+
+  const [entidades, setEntidades] = useState<Entidad[]>([])
   const [busqueda, setBusqueda] = useState("")
   const [filtroTipo, setFiltroTipo] = useState("todos")
   const [filtroEstado, setFiltroEstado] = useState("todos")
   const [ordenamiento, setOrdenamiento] = useState("nombre")
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchEntidades = async () => {
+      setLoading(true)
+      try {
+        const data = await apiEntidades.list()
+        setEntidades(Array.isArray(data) ? data : [])
+      } catch {
+        setEntidades([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchEntidades()
+  }, [])
+
+  const eliminarEntidad = async (id: number) => {
+    if (!window.confirm("¿Seguro que deseas eliminar esta entidad?")) return
+    await apiEntidades.delete(id)
+    setEntidades(entidades.filter((e) => e.id !== id))
+  }
+
+  function getStatusColor(status: string) {
+    switch (status) {
+      case "activo":
+        return "bg-green-100 text-green-800 hover:bg-green-100"
+      case "inactivo":
+        return "bg-red-100 text-red-800 hover:bg-red-100"
+      default:
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+    }
+  }
+
+  function getTipoColor(tipo: string) {
+    switch (tipo) {
+      case "matriz":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100"
+      case "sucursal":
+        return "bg-purple-100 text-purple-800 hover:bg-purple-100"
+      default:
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+    }
+  }
 
   // Filtrar y ordenar entidades
   const entidadesFiltradas = entidades
     .filter((entidad) => {
       const coincideBusqueda =
-        entidad.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-        entidad.propietario.toLowerCase().includes(busqueda.toLowerCase()) ||
-        entidad.ruc.includes(busqueda) ||
-        entidad.email.toLowerCase().includes(busqueda.toLowerCase())
+        (entidad.nombre?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
+        (entidad.propietario?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
+        (entidad.ruc || "").includes(busqueda) ||
+        (entidad.email?.toLowerCase() || "").includes(busqueda.toLowerCase())
 
       const coincideTipo = filtroTipo === "todos" || entidad.tipo === filtroTipo
       const coincideEstado = filtroEstado === "todos" || entidad.estado === filtroEstado
@@ -118,18 +113,10 @@ export default function EntidadesPage() {
       switch (ordenamiento) {
         case "nombre":
           return a.nombre.localeCompare(b.nombre)
-        case "fecha":
-          return new Date(b.fechaRegistro).getTime() - new Date(a.fechaRegistro).getTime()
-        case "tipo":
-          return a.tipo.localeCompare(b.tipo)
         default:
           return 0
       }
     })
-
-  const eliminarEntidad = (id: number) => {
-    setEntidades(entidades.filter((entidad) => entidad.id !== id))
-  }
 
   return (
     <div className="container py-10">
@@ -146,6 +133,12 @@ export default function EntidadesPage() {
             <Plus className="mr-2 h-4 w-4" />
             Nueva Entidad
           </Button>
+        </Link>
+      </div>
+
+      <div className="mb-4">
+        <Link href="/">
+          <Button variant="outline">Regresar</Button>
         </Link>
       </div>
 
@@ -198,6 +191,7 @@ export default function EntidadesPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Logo</TableHead>
               <TableHead>Nombre</TableHead>
               <TableHead>Propietario</TableHead>
               <TableHead>RUC</TableHead>
@@ -211,13 +205,20 @@ export default function EntidadesPage() {
           <TableBody>
             {entidadesFiltradas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   No se encontraron entidades
                 </TableCell>
               </TableRow>
             ) : (
               entidadesFiltradas.map((entidad) => (
                 <TableRow key={entidad.id}>
+                  <TableCell>
+                    {entidad.logo ? (
+                      <img src={entidad.logo} alt="Logo" className="h-10 w-10 object-contain rounded border mb-1" />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Sin logo</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="font-medium">{entidad.nombre}</div>
                     <div className="text-sm text-muted-foreground max-w-xs truncate">{entidad.direccion}</div>

@@ -13,55 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
-
-// Datos de ejemplo para proformas recientes
-const recentProformas = [
-  {
-    id: 1,
-    numero: "PRO-2023-001",
-    cliente: "Juan Pérez",
-    vehiculo: "Toyota Corolla",
-    fecha: "2023-05-15",
-    total: 245.6,
-    estado: "pendiente",
-  },
-  {
-    id: 2,
-    numero: "PRO-2023-002",
-    cliente: "María López",
-    vehiculo: "Chevrolet Aveo",
-    fecha: "2023-05-14",
-    total: 189.3,
-    estado: "aprobada",
-  },
-  {
-    id: 3,
-    numero: "PRO-2023-003",
-    cliente: "Carlos Ruiz",
-    vehiculo: "Kia Sportage",
-    fecha: "2023-05-12",
-    total: 567.8,
-    estado: "facturada",
-  },
-  {
-    id: 4,
-    numero: "PRO-2023-004",
-    cliente: "Ana Gómez",
-    vehiculo: "Hyundai Tucson",
-    fecha: "2023-05-10",
-    total: 320.45,
-    estado: "rechazada",
-  },
-  {
-    id: 5,
-    numero: "PRO-2023-005",
-    cliente: "Roberto Suárez",
-    vehiculo: "Nissan X-Trail",
-    fecha: "2023-05-08",
-    total: 412.75,
-    estado: "pendiente",
-  },
-]
+import { useEffect, useState } from "react"
+import { apiProformas, apiClientes, apiVehiculos } from "@/lib/api"
 
 // Función para obtener el color de la badge según el estado
 function getStatusColor(status: string) {
@@ -80,6 +33,45 @@ function getStatusColor(status: string) {
 }
 
 export function RecentProformas() {
+  const [proformas, setProformas] = useState<any[]>([])
+  const [clientes, setClientes] = useState<any>({})
+  const [vehiculos, setVehiculos] = useState<any>({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const data = await apiProformas.list()
+        setProformas(Array.isArray(data) ? data.slice(0, 10) : [])
+        // Obtener clientes y vehículos únicos
+        const clienteIds = [...new Set(data.map((p: any) => String(p.cliente_id)).filter(Boolean))] as string[];
+        const vehiculoIds = [...new Set(data.map((p: any) => String(p.vehiculo_id)).filter(Boolean))] as string[];
+        const clientesObj: Record<string, any> = {}
+        const vehiculosObj: Record<string, any> = {}
+        await Promise.all([
+          ...clienteIds.map(async (id) => {
+            try {
+              clientesObj[id] = await apiClientes.get(id)
+            } catch {}
+          }),
+          ...vehiculoIds.map(async (id) => {
+            try {
+              vehiculosObj[id] = await apiVehiculos.get(id)
+            } catch {}
+          })
+        ])
+        setClientes(clientesObj)
+        setVehiculos(vehiculosObj)
+      } catch {
+        setProformas([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -95,48 +87,62 @@ export function RecentProformas() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {recentProformas.map((proforma) => (
-            <TableRow key={proforma.id}>
-              <TableCell className="font-medium">{proforma.numero}</TableCell>
-              <TableCell>{proforma.cliente}</TableCell>
-              <TableCell>{proforma.vehiculo}</TableCell>
-              <TableCell>{new Date(proforma.fecha).toLocaleDateString()}</TableCell>
-              <TableCell className="text-right">${proforma.total.toFixed(2)}</TableCell>
-              <TableCell>
-                <Badge className={getStatusColor(proforma.estado)} variant="outline">
-                  {proforma.estado.charAt(0).toUpperCase() + proforma.estado.slice(1)}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Abrir menú</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href={`/proformas/${proforma.id}`}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        <span>Ver detalles</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Printer className="mr-2 h-4 w-4" />
-                      <span>Imprimir</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <FileText className="mr-2 h-4 w-4" />
-                      <span>Generar factura</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                Cargando...
               </TableCell>
             </TableRow>
-          ))}
+          ) : proformas.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                No hay proformas recientes
+              </TableCell>
+            </TableRow>
+          ) : (
+            proformas.map((proforma) => (
+              <TableRow key={proforma.id}>
+                <TableCell className="font-medium">{proforma.numero}</TableCell>
+                <TableCell>{clientes[proforma.cliente_id]?.nombre || proforma.cliente_id || "-"}</TableCell>
+                <TableCell>{vehiculos[proforma.vehiculo_id]?.marca ? `${vehiculos[proforma.vehiculo_id]?.marca} ${vehiculos[proforma.vehiculo_id]?.modelo}` : proforma.vehiculo_id || "-"}</TableCell>
+                <TableCell>{new Date(proforma.fecha).toLocaleDateString()}</TableCell>
+                <TableCell className="text-right">${Number(proforma.total).toFixed(2)}</TableCell>
+                <TableCell>
+                  <Badge className={getStatusColor(proforma.estado)} variant="outline">
+                    {proforma.estado.charAt(0).toUpperCase() + proforma.estado.slice(1)}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Abrir menú</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href={`/proformas/${proforma.id}`}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          <span>Ver detalles</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Printer className="mr-2 h-4 w-4" />
+                        <span>Imprimir</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <FileText className="mr-2 h-4 w-4" />
+                        <span>Generar factura</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

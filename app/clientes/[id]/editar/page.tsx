@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,6 +11,7 @@ import { ArrowLeft, Save, Users } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { useRouter, useParams } from "next/navigation"
+import { apiClientes } from "@/lib/api"
 
 // Datos de ejemplo del cliente existente
 const clienteExistente = {
@@ -39,55 +40,55 @@ export default function EditarClientePage() {
   const params = useParams()
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [formData, setFormData] = useState<ClienteData | null>(null)
 
-  const [formData, setFormData] = useState<ClienteData>(clienteExistente)
+  useEffect(() => {
+    const fetchCliente = async () => {
+      setLoading(true)
+      try {
+        const data = await apiClientes.get(params.id)
+        setFormData(data)
+      } catch {
+        setFormData(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCliente()
+  }, [params.id])
 
   const validarFormulario = () => {
     const nuevosErrores: Record<string, string> = {}
-
-    if (!formData.nombre.trim()) {
-      nuevosErrores.nombre = "El nombre es requerido"
-    }
-    if (!formData.ruc.trim()) {
-      nuevosErrores.ruc = "El RUC/CI es requerido"
-    } else if (formData.ruc.length < 10) {
-      nuevosErrores.ruc = "El RUC/CI debe tener al menos 10 dígitos"
-    }
-    if (!formData.telefono.trim()) {
-      nuevosErrores.telefono = "El teléfono es requerido"
-    }
-    if (!formData.email.trim()) {
-      nuevosErrores.email = "El email es requerido"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      nuevosErrores.email = "El email no es válido"
-    }
-    if (!formData.direccion.trim()) {
-      nuevosErrores.direccion = "La dirección es requerida"
-    }
-
+    if (!formData?.nombre?.trim()) nuevosErrores.nombre = "El nombre es requerido"
+    if (!formData?.ruc?.trim()) nuevosErrores.ruc = "El RUC/CI es requerido"
+    else if (formData.ruc.length < 10) nuevosErrores.ruc = "El RUC/CI debe tener al menos 10 dígitos"
+    if (!formData?.telefono?.trim()) nuevosErrores.telefono = "El teléfono es requerido"
+    if (!formData?.email?.trim()) nuevosErrores.email = "El email es requerido"
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) nuevosErrores.email = "El email no es válido"
+    if (!formData?.direccion?.trim()) nuevosErrores.direccion = "La dirección es requerida"
     setErrors(nuevosErrores)
     return Object.keys(nuevosErrores).length === 0
   }
 
-  const guardarCambios = async () => {
-    if (!validarFormulario()) {
-      return
-    }
-
+  const guardarCliente = async () => {
+    if (!formData || !validarFormulario()) return
     setLoading(true)
     try {
-      // Simular guardado en base de datos
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      console.log("Datos actualizados del cliente:", formData)
-
-      // Redirigir a la vista del cliente
-      router.push(`/clientes/${params.id}`)
+      await apiClientes.update(params.id, formData)
+      router.push("/clientes")
     } catch (error) {
       console.error("Error al actualizar el cliente:", error)
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading) {
+    return <div>Cargando...</div>
+  }
+
+  if (!formData) {
+    return <div className="p-8 text-center text-muted-foreground">Cargando datos del cliente...</div>
   }
 
   return (
@@ -222,7 +223,7 @@ export default function EditarClientePage() {
 
             {/* Botones */}
             <div className="flex gap-4 pt-4">
-              <Button onClick={guardarCambios} disabled={loading} className="flex-1">
+              <Button onClick={guardarCliente} disabled={loading} className="flex-1">
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>

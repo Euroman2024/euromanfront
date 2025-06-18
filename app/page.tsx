@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -5,8 +7,44 @@ import { CalendarDays, FileText, Package, Users } from "lucide-react"
 import Link from "next/link"
 import { DashboardStats } from "@/components/dashboard-stats"
 import { RecentProformas } from "@/components/recent-proformas"
+import { useEffect, useState } from "react"
+import { apiProformas, apiClientes, apiRepuestos } from "@/lib/api"
 
 export default function Home() {
+  const [stats, setStats] = useState({
+    totalProformas: 0,
+    proformasPendientes: 0,
+    clientes: 0,
+    repuestos: 0,
+    repuestosBajoStock: 0,
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoading(true)
+      try {
+        const [proformas, clientes, repuestos] = await Promise.all([
+          apiProformas.list(),
+          apiClientes.list(),
+          apiRepuestos.list(),
+        ])
+        setStats({
+          totalProformas: Array.isArray(proformas) ? proformas.length : 0,
+          proformasPendientes: Array.isArray(proformas) ? proformas.filter((p: any) => p.estado === "pendiente").length : 0,
+          clientes: Array.isArray(clientes) ? clientes.length : 0,
+          repuestos: Array.isArray(repuestos) ? repuestos.length : 0,
+          repuestosBajoStock: Array.isArray(repuestos) ? repuestos.filter((r: any) => Number(r.stock) <= Number(r.stockMinimo)).length : 0,
+        })
+      } catch {
+        setStats({ totalProformas: 0, proformasPendientes: 0, clientes: 0, repuestos: 0, repuestosBajoStock: 0 })
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStats()
+  }, [])
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
@@ -32,26 +70,26 @@ export default function Home() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <DashboardStats
               title="Total Proformas"
-              value="128"
-              description="+6% del mes pasado"
+              value={loading ? "-" : stats.totalProformas.toString()}
+              description={loading ? "" : "Total registradas en el sistema"}
               icon={<FileText className="h-4 w-4 text-muted-foreground" />}
             />
             <DashboardStats
               title="Proformas Pendientes"
-              value="24"
-              description="12 requieren seguimiento"
+              value={loading ? "-" : stats.proformasPendientes.toString()}
+              description={loading ? "" : `${stats.proformasPendientes} requieren seguimiento`}
               icon={<CalendarDays className="h-4 w-4 text-muted-foreground" />}
             />
             <DashboardStats
               title="Clientes"
-              value="86"
-              description="+2 nuevos esta semana"
+              value={loading ? "-" : stats.clientes.toString()}
+              description={loading ? "" : `Total registrados`}
               icon={<Users className="h-4 w-4 text-muted-foreground" />}
             />
             <DashboardStats
               title="Repuestos"
-              value="342"
-              description="8 con stock bajo"
+              value={loading ? "-" : stats.repuestos.toString()}
+              description={loading ? "" : `${stats.repuestosBajoStock} con stock bajo`}
               icon={<Package className="h-4 w-4 text-muted-foreground" />}
             />
           </div>

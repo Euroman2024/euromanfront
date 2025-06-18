@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -27,65 +27,22 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link"
+import { apiClientes } from "@/lib/api"
 
 // Datos de ejemplo para clientes
-const clientesData = [
-  {
-    id: 1,
-    nombre: "Juan Pérez García",
-    ruc: "1234567890001",
-    direccion: "Av. Principal 123, Quito",
-    telefono: "+593 99 123-4567",
-    email: "juan.perez@email.com",
-    estado: "activo",
-    fechaRegistro: "2023-01-15",
-    vehiculos: 2,
-  },
-  {
-    id: 2,
-    nombre: "María López Sánchez",
-    ruc: "9876543210001",
-    direccion: "Calle Secundaria 456, Guayaquil",
-    telefono: "+593 98 765-4321",
-    email: "maria.lopez@email.com",
-    estado: "activo",
-    fechaRegistro: "2023-02-20",
-    vehiculos: 1,
-  },
-  {
-    id: 3,
-    nombre: "Carlos Ruiz Mendoza",
-    ruc: "5678901234001",
-    direccion: "Av. Amazonas 789, Cuenca",
-    telefono: "+593 97 555-1234",
-    email: "carlos.ruiz@email.com",
-    estado: "inactivo",
-    fechaRegistro: "2023-03-10",
-    vehiculos: 1,
-  },
-  {
-    id: 4,
-    nombre: "Ana Gómez Torres",
-    ruc: "1357924680001",
-    direccion: "Calle Los Pinos 321, Ambato",
-    telefono: "+593 96 888-9999",
-    email: "ana.gomez@email.com",
-    estado: "activo",
-    fechaRegistro: "2023-04-05",
-    vehiculos: 3,
-  },
-  {
-    id: 5,
-    nombre: "Roberto Suárez Villa",
-    ruc: "2468135790001",
-    direccion: "Av. Central 654, Machala",
-    telefono: "+593 95 777-8888",
-    email: "roberto.suarez@email.com",
-    estado: "activo",
-    fechaRegistro: "2023-05-12",
-    vehiculos: 1,
-  },
-]
+
+
+interface Cliente {
+  id: number;
+  nombre: string;
+  ruc: string;
+  direccion: string;
+  telefono: string;
+  email: string;
+  estado: string;
+  fechaRegistro?: string;
+  vehiculos?: number;
+}
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -99,19 +56,41 @@ function getStatusColor(status: string) {
 }
 
 export default function ClientesPage() {
-  const [clientes, setClientes] = useState(clientesData)
+  const [clientes, setClientes] = useState<Cliente[]>([])
   const [busqueda, setBusqueda] = useState("")
   const [filtroEstado, setFiltroEstado] = useState("todos")
   const [ordenamiento, setOrdenamiento] = useState("nombre")
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchClientes = async () => {
+      setLoading(true)
+      try {
+        const data = await apiClientes.list()
+        setClientes(Array.isArray(data) ? data : [])
+      } catch {
+        setClientes([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchClientes()
+  }, [])
+
+  const eliminarCliente = async (id: number) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este cliente?")) return
+    await apiClientes.delete(id)
+    setClientes(clientes.filter((c) => c.id !== id))
+  }
 
   // Filtrar y ordenar clientes
   const clientesFiltrados = clientes
     .filter((cliente) => {
       const coincideBusqueda =
-        cliente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-        cliente.ruc.includes(busqueda) ||
-        cliente.email.toLowerCase().includes(busqueda.toLowerCase()) ||
-        cliente.telefono.includes(busqueda)
+        (cliente.nombre?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
+        (cliente.ruc || "").includes(busqueda) ||
+        (cliente.email?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
+        (cliente.telefono || "").includes(busqueda)
 
       const coincideEstado = filtroEstado === "todos" || cliente.estado === filtroEstado
 
@@ -121,21 +100,18 @@ export default function ClientesPage() {
       switch (ordenamiento) {
         case "nombre":
           return a.nombre.localeCompare(b.nombre)
-        case "fecha":
-          return new Date(b.fechaRegistro).getTime() - new Date(a.fechaRegistro).getTime()
-        case "vehiculos":
-          return b.vehiculos - a.vehiculos
         default:
           return 0
       }
     })
 
-  const eliminarCliente = (id: number) => {
-    setClientes(clientes.filter((cliente) => cliente.id !== id))
-  }
-
   return (
     <div className="container py-10">
+      <div className="mb-4">
+        <Link href="/">
+          <Button variant="outline">Regresar</Button>
+        </Link>
+      </div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Users className="h-8 w-8" />
@@ -228,7 +204,7 @@ export default function ClientesPage() {
                       {cliente.estado.charAt(0).toUpperCase() + cliente.estado.slice(1)}
                     </Badge>
                   </TableCell>
-                  <TableCell>{new Date(cliente.fechaRegistro).toLocaleDateString()}</TableCell>
+                  <TableCell>{cliente.fechaRegistro ? new Date(cliente.fechaRegistro).toLocaleDateString() : ""}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

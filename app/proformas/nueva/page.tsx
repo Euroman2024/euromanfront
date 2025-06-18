@@ -14,60 +14,42 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { apiProformas, apiProformaItems, apiClientes, apiVehiculos, apiRepuestos } from "@/lib/api"
 
-// Base de datos simulada
-const DB = {
-  clientes: [
-    {
-      id: 1,
-      nombre: "Juan Pérez García",
-      ruc: "1234567890001",
-      direccion: "Av. Principal 123, Quito",
-      telefono: "+593 99 123-4567",
-      email: "juan.perez@email.com",
-    },
-    {
-      id: 2,
-      nombre: "María López Sánchez",
-      ruc: "9876543210001",
-      direccion: "Calle Secundaria 456, Guayaquil",
-      telefono: "+593 98 765-4321",
-      email: "maria.lopez@email.com",
-    },
-  ],
-  vehiculos: [
-    { id: 1, clienteId: 1, marca: "Toyota", modelo: "Corolla", anio: "2018", placa: "ABC-123", color: "Blanco" },
-    { id: 2, clienteId: 1, marca: "Nissan", modelo: "Sentra", anio: "2020", placa: "DEF-456", color: "Gris" },
-    { id: 3, clienteId: 2, marca: "Chevrolet", modelo: "Aveo", anio: "2019", placa: "GHI-789", color: "Rojo" },
-  ],
-  repuestos: [
-    { id: 1, codigo: "FIL001", descripcion: "Filtro de aceite Toyota", precio: 12.5, stock: 25, categoria: "Filtros" },
-    {
-      id: 2,
-      codigo: "FRE001",
-      descripcion: "Pastillas de freno delanteras",
-      precio: 45.0,
-      stock: 15,
-      categoria: "Frenos",
-    },
-    {
-      id: 3,
-      codigo: "ACE001",
-      descripcion: "Aceite motor 5W-30 (4L)",
-      precio: 28.0,
-      stock: 30,
-      categoria: "Lubricantes",
-    },
-    { id: 4, codigo: "FIL002", descripcion: "Filtro de aire", precio: 15.75, stock: 20, categoria: "Filtros" },
-    {
-      id: 5,
-      codigo: "SER001",
-      descripcion: "Mano de obra - Mantenimiento",
-      precio: 35.0,
-      stock: 999,
-      categoria: "Servicios",
-    },
-  ],
+interface Cliente {
+  id: number;
+  nombre: string;
+  ruc: string;
+  direccion: string;
+  telefono: string;
+  email: string;
+}
+interface Vehiculo {
+  id: number;
+  cliente_id: number;
+  marca: string;
+  modelo: string;
+  anio: string;
+  placa: string;
+  color: string;
+}
+interface Repuesto {
+  id: number;
+  codigo: string;
+  descripcion: string;
+  precio: number;
+  stock: number;
+  categoria: string;
+}
+interface ItemProforma {
+  id: number;
+  repuestoId: number;
+  codigo: string;
+  descripcion: string;
+  cantidad: number;
+  precio: number;
+  categoria: string;
+  stockDisponible: number;
 }
 
 export default function NuevaProformaPage() {
@@ -80,26 +62,42 @@ export default function NuevaProformaPage() {
   const [vehiculoId, setVehiculoId] = useState("")
   const [km, setKm] = useState("")
   const [descripcion, setDescripcion] = useState("")
-  const [items, setItems] = useState([])
+  const [clientes, setClientes] = useState<Cliente[]>([])
+  const [vehiculos, setVehiculos] = useState<Vehiculo[]>([])
+  const [repuestos, setRepuestos] = useState<Repuesto[]>([])
+  const [items, setItems] = useState<ItemProforma[]>([])
   const [notaAviso, setNotaAviso] = useState("Esta proforma tiene validez de 15 días.")
   const [aviso, setAviso] = useState("Los precios incluyen IVA. Garantía de 30 días en repuestos.")
 
   // Estados para búsqueda
   const [busquedaRepuesto, setBusquedaRepuesto] = useState("")
-  const [repuestoSeleccionado, setRepuestoSeleccionado] = useState(null)
+  const [repuestoSeleccionado, setRepuestoSeleccionado] = useState<Repuesto | null>(null)
   const [cantidad, setCantidad] = useState(1)
   const [mostrarLista, setMostrarLista] = useState(false)
 
   // Estados derivados
-  const [vehiculosFiltrados, setVehiculosFiltrados] = useState([])
-  const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
-  const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState(null)
-  const [repuestosFiltrados, setRepuestosFiltrados] = useState([])
+  const [vehiculosFiltrados, setVehiculosFiltrados] = useState<Vehiculo[]>([])
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null)
+  const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState<Vehiculo | null>(null)
+  const [repuestosFiltrados, setRepuestosFiltrados] = useState<Repuesto[]>([])
 
   // Estados UI
   const [loading, setLoading] = useState(false)
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [mensaje, setMensaje] = useState("")
+
+  // Cargar clientes, vehículos y repuestos reales
+  useEffect(() => {
+    const fetchData = async () => {
+      const clientes = await apiClientes.list()
+      setClientes(clientes)
+      const vehiculos = await apiVehiculos.list()
+      setVehiculos(vehiculos)
+      const repuestos = await apiRepuestos.list()
+      setRepuestos(repuestos)
+    }
+    fetchData()
+  }, [])
 
   // Filtrar repuestos
   useEffect(() => {
@@ -107,7 +105,7 @@ export default function NuevaProformaPage() {
       setRepuestosFiltrados([])
       setMostrarLista(false)
     } else {
-      const filtrados = DB.repuestos.filter(
+      const filtrados = repuestos.filter(
         (r) =>
           r.codigo.toLowerCase().includes(busquedaRepuesto.toLowerCase()) ||
           r.descripcion.toLowerCase().includes(busquedaRepuesto.toLowerCase()),
@@ -115,7 +113,7 @@ export default function NuevaProformaPage() {
       setRepuestosFiltrados(filtrados)
       setMostrarLista(true)
     }
-  }, [busquedaRepuesto])
+  }, [busquedaRepuesto, repuestos])
 
   // Calcular totales
   const subtotal = items.reduce((sum, item) => sum + item.cantidad * item.precio, 0)
@@ -123,34 +121,30 @@ export default function NuevaProformaPage() {
   const total = subtotal + iva
 
   // Manejar cambio de cliente
-  const handleClienteChange = (value) => {
+  const handleClienteChange = (value: string) => {
     setClienteId(value)
     setVehiculoId("")
     setVehiculoSeleccionado(null)
-
-    const cliente = DB.clientes.find((c) => c.id.toString() === value)
+    const cliente = clientes.find((c) => c.id.toString() === value) || null
     setClienteSeleccionado(cliente)
-
-    const vehiculos = DB.vehiculos.filter((v) => v.clienteId.toString() === value)
-    setVehiculosFiltrados(vehiculos)
+    // Filtrar usando cliente_id (dato real)
+    const vehiculosCliente = vehiculos.filter((v) => v.cliente_id?.toString() === value)
+    setVehiculosFiltrados(vehiculosCliente)
   }
 
-  // Manejar cambio de vehículo
-  const handleVehiculoChange = (value) => {
+  const handleVehiculoChange = (value: string) => {
     setVehiculoId(value)
-    const vehiculo = vehiculosFiltrados.find((v) => v.id.toString() === value)
+    const vehiculo = vehiculosFiltrados.find((v) => v.id.toString() === value) || null
     setVehiculoSeleccionado(vehiculo)
   }
 
-  // Seleccionar repuesto
-  const seleccionarRepuesto = (repuesto) => {
+  const seleccionarRepuesto = (repuesto: Repuesto) => {
     setRepuestoSeleccionado(repuesto)
     setBusquedaRepuesto(`${repuesto.codigo} - ${repuesto.descripcion}`)
     setMostrarLista(false)
     setCantidad(1)
   }
 
-  // Limpiar selección
   const limpiarSeleccion = () => {
     setRepuestoSeleccionado(null)
     setBusquedaRepuesto("")
@@ -158,39 +152,33 @@ export default function NuevaProformaPage() {
     setMostrarLista(false)
   }
 
-  // Agregar item
   const agregarItem = () => {
     if (!repuestoSeleccionado) {
       setMensaje("❌ Selecciona un repuesto")
       return
     }
-
     if (cantidad <= 0) {
       setMensaje("❌ La cantidad debe ser mayor a 0")
       return
     }
-
     if (cantidad > repuestoSeleccionado.stock) {
       setMensaje(`❌ Stock insuficiente. Disponible: ${repuestoSeleccionado.stock}`)
       return
     }
-
     const itemExistente = items.find((item) => item.repuestoId === repuestoSeleccionado.id)
-
     if (itemExistente) {
       const nuevaCantidad = itemExistente.cantidad + cantidad
       if (nuevaCantidad > repuestoSeleccionado.stock) {
         setMensaje(`❌ Stock insuficiente. Ya tienes ${itemExistente.cantidad}`)
         return
       }
-
       setItems(
         items.map((item) =>
           item.repuestoId === repuestoSeleccionado.id ? { ...item, cantidad: nuevaCantidad } : item,
         ),
       )
     } else {
-      const nuevoItem = {
+      const nuevoItem: ItemProforma = {
         id: Date.now(),
         repuestoId: repuestoSeleccionado.id,
         codigo: repuestoSeleccionado.codigo,
@@ -200,35 +188,29 @@ export default function NuevaProformaPage() {
         categoria: repuestoSeleccionado.categoria,
         stockDisponible: repuestoSeleccionado.stock,
       }
-
       setItems([...items, nuevoItem])
     }
-
     limpiarSeleccion()
     setMensaje(`✅ ${repuestoSeleccionado.descripcion} agregado`)
     setTimeout(() => setMensaje(""), 3000)
   }
 
-  // Eliminar item
-  const eliminarItem = (itemId) => {
+  const eliminarItem = (itemId: number) => {
     setItems(items.filter((item) => item.id !== itemId))
     setMensaje("✅ Item eliminado")
     setTimeout(() => setMensaje(""), 2000)
   }
 
-  // Actualizar cantidad
-  const actualizarCantidad = (itemId, nuevaCantidad) => {
+  const actualizarCantidad = (itemId: number, nuevaCantidad: number) => {
     if (nuevaCantidad <= 0) {
       eliminarItem(itemId)
       return
     }
-
     const item = items.find((i) => i.id === itemId)
-    if (nuevaCantidad > item.stockDisponible) {
+    if (item && nuevaCantidad > item.stockDisponible) {
       setMensaje(`❌ Stock insuficiente. Máximo: ${item.stockDisponible}`)
       return
     }
-
     setItems(items.map((item) => (item.id === itemId ? { ...item, cantidad: nuevaCantidad } : item)))
   }
 
@@ -252,14 +234,37 @@ export default function NuevaProformaPage() {
       setMensaje("❌ Completa todos los campos requeridos")
       return
     }
-
     setLoading(true)
-
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
+      // Guardar proforma principal
+      const proformaData = {
+        numero: numeroProforma,
+        fecha,
+        cliente_id: Number(clienteId),
+        vehiculo_id: Number(vehiculoId),
+        entidad_id: 1, // siempre enviar 1 (entidad principal)
+        descripcion,
+        subtotal: Number(subtotal),
+        iva: Number(iva),
+        total: Number(total),
+        nota_aviso: notaAviso,
+        aviso,
+        kilometraje: km ? km : null,
+        estado: "pendiente", // forzar siempre 'pendiente' al crear
+        fecha_vencimiento: fecha,
+        usuario_creacion: "sistema"
+      }
+      const res = await apiProformas.create(proformaData)
+      // Guardar items
+      for (const item of items) {
+        await apiProformaItems.create({
+          proforma_id: res.id,
+          repuesto_id: item.repuestoId,
+          cantidad: item.cantidad,
+          precio_unitario: item.precio,
+        })
+      }
       setMensaje(`✅ Proforma ${numeroProforma} guardada exitosamente!`)
-
       setTimeout(() => {
         router.push("/proformas")
       }, 2000)
@@ -344,7 +349,7 @@ export default function NuevaProformaPage() {
                       <SelectValue placeholder="Seleccionar cliente" />
                     </SelectTrigger>
                     <SelectContent>
-                      {DB.clientes.map((cliente) => (
+                      {clientes.map((cliente) => (
                         <SelectItem key={cliente.id} value={cliente.id.toString()}>
                           {cliente.nombre}
                         </SelectItem>
@@ -460,7 +465,7 @@ export default function NuevaProformaPage() {
                               </Badge>
                             </div>
                             <div className="text-right">
-                              <p className="font-medium">${repuesto.precio.toFixed(2)}</p>
+                              <p className="font-medium">${Number(repuesto.precio).toFixed(2)}</p>
                               <p className="text-sm text-gray-600">Stock: {repuesto.stock}</p>
                             </div>
                           </div>
@@ -507,10 +512,10 @@ export default function NuevaProformaPage() {
                       </Badge>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">${repuestoSeleccionado.precio.toFixed(2)}</p>
+                      <p className="font-medium">${Number(repuestoSeleccionado.precio).toFixed(2)}</p>
                       <p className="text-sm text-gray-600">Stock: {repuestoSeleccionado.stock}</p>
                       <p className="text-sm font-medium text-blue-600">
-                        Total: ${(repuestoSeleccionado.precio * cantidad).toFixed(2)}
+                        Total: ${(Number(repuestoSeleccionado.precio) * cantidad).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -568,9 +573,9 @@ export default function NuevaProformaPage() {
                               className="w-20 text-center"
                             />
                           </TableCell>
-                          <TableCell className="text-right">${item.precio.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">${Number(item.precio).toFixed(2)}</TableCell>
                           <TableCell className="text-right font-medium">
-                            ${(item.cantidad * item.precio).toFixed(2)}
+                            ${(item.cantidad * Number(item.precio)).toFixed(2)}
                           </TableCell>
                           <TableCell className="text-center">
                             <Button

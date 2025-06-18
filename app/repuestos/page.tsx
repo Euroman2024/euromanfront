@@ -27,114 +27,22 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link"
+import { apiRepuestos } from "@/lib/api"
 
-// Datos de ejemplo para repuestos
-const repuestosData = [
-  {
-    id: 1,
-    codigo: "REP001",
-    descripcion: "Filtro de aceite Toyota Original",
-    categoria: "Filtros",
-    precio: 12.5,
-    precioIva: 14.0,
-    stock: 25,
-    stockMinimo: 10,
-    proveedor: "Toyota Ecuador",
-    ubicacion: "A1-B2",
-    estado: "activo",
-  },
-  {
-    id: 2,
-    codigo: "REP002",
-    descripcion: "Pastillas de freno delanteras",
-    categoria: "Frenos",
-    precio: 45.0,
-    precioIva: 50.4,
-    stock: 15,
-    stockMinimo: 5,
-    proveedor: "Brembo",
-    ubicacion: "B2-C3",
-    estado: "activo",
-  },
-  {
-    id: 3,
-    codigo: "REP003",
-    descripcion: "Amortiguador trasero",
-    categoria: "Suspensión",
-    precio: 85.0,
-    precioIva: 95.2,
-    stock: 3,
-    stockMinimo: 5,
-    proveedor: "Monroe",
-    ubicacion: "C1-D2",
-    estado: "activo",
-  },
-  {
-    id: 4,
-    codigo: "REP004",
-    descripcion: "Batería 12V 60Ah",
-    categoria: "Eléctrico",
-    precio: 120.0,
-    precioIva: 134.4,
-    stock: 12,
-    stockMinimo: 3,
-    proveedor: "Bosch",
-    ubicacion: "D3-E1",
-    estado: "activo",
-  },
-  {
-    id: 5,
-    codigo: "REP005",
-    descripcion: "Kit de distribución completo",
-    categoria: "Motor",
-    precio: 180.0,
-    precioIva: 201.6,
-    stock: 2,
-    stockMinimo: 3,
-    proveedor: "Gates",
-    ubicacion: "E2-F3",
-    estado: "activo",
-  },
-  {
-    id: 6,
-    codigo: "REP006",
-    descripcion: "Aceite motor 5W-30 (4 litros)",
-    categoria: "Lubricantes",
-    precio: 28.0,
-    precioIva: 31.36,
-    stock: 30,
-    stockMinimo: 15,
-    proveedor: "Castrol",
-    ubicacion: "F1-G2",
-    estado: "activo",
-  },
-  {
-    id: 7,
-    codigo: "REP007",
-    descripcion: "Filtro de aire",
-    categoria: "Filtros",
-    precio: 15.75,
-    precioIva: 17.64,
-    stock: 20,
-    stockMinimo: 8,
-    proveedor: "Mann Filter",
-    ubicacion: "A2-B1",
-    estado: "activo",
-  },
-  {
-    id: 8,
-    codigo: "REP008",
-    descripcion: "Bujías NGK (set 4 unidades)",
-    categoria: "Motor",
-    precio: 32.0,
-    precioIva: 35.84,
-    stock: 18,
-    stockMinimo: 10,
-    proveedor: "NGK",
-    ubicacion: "G3-H1",
-    estado: "activo",
-  },
-]
+// Tipado para los repuestos
+interface Repuesto {
+  id: number;
+  codigo: string;
+  descripcion: string;
+  categoria: string;
+  precio: number | string;
+  precioIva: number | string;
+  stock: number;
+  stockMinimo: number;
+  proveedor: string;
+  ubicacion: string;
+  estado: string;
+}
 
 function getStockStatus(stock: number, stockMinimo: number) {
   if (stock === 0) {
@@ -157,7 +65,7 @@ function getStockStatus(stock: number, stockMinimo: number) {
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") + "/repuestos/api_repuestos.php"
 
 export default function RepuestosPage() {
-  const [repuestos, setRepuestos] = useState([])
+  const [repuestos, setRepuestos] = useState<Repuesto[]>([])
   const [busqueda, setBusqueda] = useState("")
   const [filtroCategoria, setFiltroCategoria] = useState("todas")
   const [filtroStock, setFiltroStock] = useState("todos")
@@ -177,7 +85,7 @@ export default function RepuestosPage() {
       try {
         const res = await fetch(url)
         const data = await res.json()
-        setRepuestos(data)
+        setRepuestos(Array.isArray(data) ? data : [])
       } catch (e) {
         setRepuestos([])
       } finally {
@@ -194,9 +102,9 @@ export default function RepuestosPage() {
   const repuestosFiltrados = repuestos
     .filter((repuesto) => {
       const coincideBusqueda =
-        repuesto.codigo.toLowerCase().includes(busqueda.toLowerCase()) ||
-        repuesto.descripcion.toLowerCase().includes(busqueda.toLowerCase()) ||
-        repuesto.proveedor.toLowerCase().includes(busqueda.toLowerCase())
+        (repuesto.codigo?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
+        (repuesto.descripcion?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
+        (repuesto.proveedor?.toLowerCase() || "").includes(busqueda.toLowerCase())
 
       const coincideCategoria = filtroCategoria === "todas" || repuesto.categoria === filtroCategoria
 
@@ -218,7 +126,7 @@ export default function RepuestosPage() {
         case "descripcion":
           return a.descripcion.localeCompare(b.descripcion)
         case "precio":
-          return b.precio - a.precio
+          return Number(b.precio) - Number(a.precio)
         case "stock":
           return a.stock - b.stock
         default:
@@ -226,8 +134,13 @@ export default function RepuestosPage() {
       }
     })
 
-  const eliminarRepuesto = (id: number) => {
-    setRepuestos(repuestos.filter((repuesto) => repuesto.id !== id))
+  const eliminarRepuesto = async (id: number) => {
+    try {
+      await apiRepuestos.delete(id)
+      setRepuestos((prev) => prev.filter((repuesto) => repuesto.id !== id))
+    } catch (error) {
+      alert("Error al eliminar el repuesto")
+    }
   }
 
   return (
@@ -245,6 +158,12 @@ export default function RepuestosPage() {
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Repuesto
           </Button>
+        </Link>
+      </div>
+
+      <div className="mb-4">
+        <Link href="/">
+          <Button variant="outline">Regresar</Button>
         </Link>
       </div>
 
