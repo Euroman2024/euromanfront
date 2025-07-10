@@ -468,6 +468,7 @@ export default function ProformaDetailPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10 text-center">N°</TableHead>
                     <TableHead>Código</TableHead>
                     <TableHead>Descripción</TableHead>
                     <TableHead className="text-right">Cantidad</TableHead>
@@ -478,7 +479,7 @@ export default function ProformaDetailPage() {
                 <TableBody>
                   {items.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                         No hay items registrados en esta proforma
                       </TableCell>
                     </TableRow>
@@ -487,6 +488,7 @@ export default function ProformaDetailPage() {
                       const repuesto = repuestos.find(r => r.id === item.repuesto_id)
                       return (
                         <TableRow key={index}>
+                          <TableCell className="text-center font-mono text-xs">{index + 1}</TableCell>
                           <TableCell className="font-mono text-sm">{repuesto?.codigo || item.repuesto_id}</TableCell>
                           <TableCell>{repuesto?.descripcion || "-"}</TableCell>
                           <TableCell className="text-right">{item.cantidad}</TableCell>

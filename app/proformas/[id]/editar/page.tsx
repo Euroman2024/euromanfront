@@ -699,6 +699,7 @@ export default function EditarProformaPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="text-center">N°</TableHead>
                       <TableHead>Código</TableHead>
                       <TableHead>Descripción</TableHead>
                       <TableHead className="text-center">Cantidad</TableHead>
@@ -710,7 +711,7 @@ export default function EditarProformaPage() {
                   <TableBody>
                     {items.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                           No hay items registrados en esta proforma
                         </TableCell>
                       </TableRow>
@@ -719,6 +720,7 @@ export default function EditarProformaPage() {
                         const repuesto = repuestos.find((r) => r.id === (item.repuestoId ?? item.repuesto_id))
                         return (
                           <TableRow key={index}>
+                            <TableCell className="text-center font-mono text-xs">{index + 1}</TableCell>
                             <TableCell className="font-mono text-sm">
                               {repuesto?.codigo || item.codigo || item.repuestoId || item.repuesto_id}
                             </TableCell>
