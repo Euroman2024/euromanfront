@@ -710,7 +710,7 @@ export default function EditarProformaPage() {
                   <TableBody>
                     {items.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                           No hay items registrados en esta proforma
                         </TableCell>
                       </TableRow>
@@ -729,6 +729,16 @@ export default function EditarProformaPage() {
                             </TableCell>
                             <TableCell className="text-right font-medium">
                               ${Number((item.cantidad ?? 0) * (item.precioUnitario ?? item.precio_unitario ?? 0)).toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => eliminarItem(item.id)}
+                                title="Eliminar"
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         )
