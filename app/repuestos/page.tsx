@@ -65,6 +65,21 @@ function getStockStatus(stock: number, stockMinimo: number) {
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") + "/repuestos/api_repuestos.php"
 
 export default function RepuestosPage() {
+  // Login overlay state
+  const [showLogin, setShowLogin] = useState(true);
+  const [loginUser, setLoginUser] = useState("");
+  const [loginPass, setLoginPass] = useState("");
+  const [loginError, setLoginError] = useState("");
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginUser === "ADMIN" && loginPass === "ADMIN123") {
+      setShowLogin(false);
+      setLoginError("");
+    } else {
+      setLoginError("Usuario o contraseña incorrectos");
+    }
+  } 
   const [repuestos, setRepuestos] = useState<Repuesto[]>([])
   const [busqueda, setBusqueda] = useState("")
   const [filtroCategoria, setFiltroCategoria] = useState("todas")
@@ -144,7 +159,49 @@ export default function RepuestosPage() {
   }
 
   return (
-    <div className="container py-10">
+    <>
+      {showLogin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-blue-300">
+          <div className="w-full max-w-xs">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 relative border border-blue-200">
+              <div className="flex flex-col items-center mb-4">
+                <div className="bg-blue-600 rounded-full p-3 mb-2 shadow">
+                  <Package className="h-8 w-8 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-blue-700 mb-1">Acceso Inventario</h2>
+                <p className="text-sm text-gray-500 mb-2">Ingresa tus credenciales para continuar</p>
+              </div>
+              <form onSubmit={handleLogin} className="flex flex-col gap-4">
+                <input
+                  type="text"
+                  placeholder="Usuario"
+                  value={loginUser}
+                  onChange={e => setLoginUser(e.target.value)}
+                  className="border border-blue-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
+                  autoFocus
+                />
+                <input
+                  type="password"
+                  placeholder="Contraseña"
+                  value={loginPass}
+                  onChange={e => setLoginPass(e.target.value)}
+                  className="border border-blue-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
+                />
+                {loginError && <div className="text-xs text-red-600 text-center font-medium">{loginError}</div>}
+                <button type="submit" className="bg-blue-600 text-white rounded-lg px-3 py-2 font-semibold shadow hover:bg-blue-700 transition">Acceder</button>
+                <div className="absolute top-2 right-2 text-xs text-gray-400 select-none">ADMIN / ADMIN123</div>
+              </form>
+              <div className="mt-6 flex justify-center">
+                <Link href="/">
+                  <button type="button" className="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg px-4 py-2 font-medium shadow border border-gray-300 transition">Regresar</button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    {!showLogin ? (
+      <div className="container py-10">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Package className="h-8 w-8" />
@@ -367,6 +424,8 @@ export default function RepuestosPage() {
           </Button>
         </div>
       </div>
-    </div>
+      </div>
+    ) : null}
+    </>
   )
 }

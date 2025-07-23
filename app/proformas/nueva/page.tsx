@@ -747,7 +747,16 @@ export default function NuevaProformaPage() {
                           <TableCell className="font-mono">{item.codigo}</TableCell>
                           <TableCell>
                             <div>
-                              <p className="font-medium">{item.descripcion}</p>
+                              <Input
+                                value={item.descripcion}
+                                onChange={e => {
+                                  const nuevaDescripcion = e.target.value;
+                                  setItems(prev => prev.map(i => i.id === item.id ? { ...i, descripcion: nuevaDescripcion } : i));
+                                }}
+                                className="font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
+                                style={{ fontSize: '11px', lineHeight: '1' }}
+
+                              />
                               <Badge variant="outline" className="text-xs">
                                 {item.categoria}
                               </Badge>
