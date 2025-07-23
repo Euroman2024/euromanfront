@@ -53,11 +53,6 @@ export default function Home() {
             <FileText className="h-6 w-6" />
             <h1 className="text-xl font-bold">Sistema de Proformas</h1>
           </div>
-          <nav className="flex items-center gap-4">
-            <Link href="/proformas/nueva">
-              <Button>Nueva Proforma</Button>
-            </Link>
-          </nav>
         </div>
       </header>
       <main className="flex-1">
@@ -67,7 +62,8 @@ export default function Home() {
             <p className="text-muted-foreground">Gestión de proformas para repuestos de vehículos</p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {/* Estadísticas */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
             <DashboardStats
               title="Total Proformas"
               value={loading ? "-" : stats.totalProformas.toString()}
@@ -94,96 +90,63 @@ export default function Home() {
             />
           </div>
 
-          <div className="mt-8">
-            <Tabs defaultValue="proformas" className="w-full">
-              <TabsList className="grid w-full grid-cols-5 md:w-auto">
-                <TabsTrigger value="proformas">Proformas</TabsTrigger>
-                <TabsTrigger value="clientes">Clientes</TabsTrigger>
-                <TabsTrigger value="repuestos">Repuestos</TabsTrigger>
-                <TabsTrigger value="vehiculos">Vehículos</TabsTrigger>
-                <TabsTrigger value="entidades">Entidades</TabsTrigger>
-              </TabsList>
-              <TabsContent value="proformas" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl">Proformas Recientes</CardTitle>
-                    <CardDescription>Gestiona y visualiza las últimas proformas creadas</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <RecentProformas />
-                  </CardContent>
-                  <CardFooter>
-                    <Link href="/proformas">
-                      <Button variant="outline">Ver todas las proformas</Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-              <TabsContent value="clientes" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl">Clientes</CardTitle>
-                    <CardDescription>Gestiona la información de tus clientes</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p>Contenido de clientes...</p>
-                  </CardContent>
-                  <CardFooter>
-                    <Link href="/clientes">
-                      <Button variant="outline">Ver todos los clientes</Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-              <TabsContent value="repuestos" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl">Inventario de Repuestos</CardTitle>
-                    <CardDescription>Gestiona tu inventario de repuestos</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p>Contenido de repuestos...</p>
-                  </CardContent>
-                  <CardFooter>
-                    <Link href="/repuestos">
-                      <Button variant="outline">Ver todos los repuestos</Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-              <TabsContent value="vehiculos" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl">Vehículos</CardTitle>
-                    <CardDescription>Gestiona la información de vehículos</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p>Contenido de vehículos...</p>
-                  </CardContent>
-                  <CardFooter>
-                    <Link href="/vehiculos">
-                      <Button variant="outline">Ver todos los vehículos</Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-              <TabsContent value="entidades" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl">Entidades</CardTitle>
-                    <CardDescription>Gestiona la información de tu empresa y sucursales</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p>Contenido de entidades...</p>
-                  </CardContent>
-                  <CardFooter>
-                    <Link href="/entidades">
-                      <Button variant="outline">Ver todas las entidades</Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-            </Tabs>
+          {/* Tarjetas de navegación */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Proformas</CardTitle>
+                <CardDescription>Gestiona y visualiza las proformas</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Link href="/proformas">
+                  <Button variant="default" className="w-full">Ir a Proformas</Button>
+                </Link>
+              </CardFooter>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Clientes</CardTitle>
+                <CardDescription>Gestiona la información de tus clientes</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Link href="/clientes">
+                  <Button variant="default" className="w-full">Ir a Clientes</Button>
+                </Link>
+              </CardFooter>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Inventario de Repuestos</CardTitle>
+                <CardDescription>Gestiona tu inventario de repuestos</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Link href="/repuestos">
+                  <Button variant="default" className="w-full">Ir a Repuestos</Button>
+                </Link>
+              </CardFooter>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Vehículos</CardTitle>
+                <CardDescription>Gestiona la información de vehículos</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Link href="/vehiculos">
+                  <Button variant="default" className="w-full">Ir a Vehículos</Button>
+                </Link>
+              </CardFooter>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Entidades</CardTitle>
+                <CardDescription>Gestiona la información de tu empresa y sucursales</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Link href="/entidades">
+                  <Button variant="default" className="w-full">Ir a Entidades</Button>
+                </Link>
+              </CardFooter>
+            </Card>
           </div>
         </div>
       </main>
