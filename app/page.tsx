@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarDays, FileText, Package, Users } from "lucide-react"
 import Link from "next/link"
 import { DashboardStats } from "@/components/dashboard-stats"
+import { DashboardStatsVisual } from "@/components/dashboard-stats-visual"
 import { RecentProformas } from "@/components/recent-proformas"
 import { useEffect, useState } from "react"
 import { apiProformas, apiClientes, apiRepuestos } from "@/lib/api"
@@ -62,87 +63,105 @@ export default function Home() {
             <p className="text-muted-foreground">Gestión de proformas para repuestos de vehículos</p>
           </div>
 
-          {/* Estadísticas */}
+          {/* Estadísticas visuales */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-            <DashboardStats
+            <DashboardStatsVisual
               title="Total Proformas"
               value={loading ? "-" : stats.totalProformas.toString()}
-              description={loading ? "" : "Total registradas en el sistema"}
-              icon={<FileText className="h-4 w-4 text-muted-foreground" />}
+              description="Total registradas en el sistema"
+              icon={<FileText className="h-8 w-8 text-blue-600" />}
+              color="bg-blue-100"
+              progress={stats.totalProformas > 0 ? 100 : 0}
             />
-            <DashboardStats
+            <DashboardStatsVisual
               title="Proformas Pendientes"
               value={loading ? "-" : stats.proformasPendientes.toString()}
-              description={loading ? "" : `${stats.proformasPendientes} requieren seguimiento`}
-              icon={<CalendarDays className="h-4 w-4 text-muted-foreground" />}
+              description="Requieren seguimiento"
+              icon={<CalendarDays className="h-8 w-8 text-yellow-500" />}
+              color="bg-yellow-100"
+              progress={stats.totalProformas > 0 ? Math.round((stats.proformasPendientes / stats.totalProformas) * 100) : 0}
             />
-            <DashboardStats
+            <DashboardStatsVisual
               title="Clientes"
               value={loading ? "-" : stats.clientes.toString()}
-              description={loading ? "" : `Total registrados`}
-              icon={<Users className="h-4 w-4 text-muted-foreground" />}
+              description="Total registrados"
+              icon={<Users className="h-8 w-8 text-green-600" />}
+              color="bg-green-100"
+              progress={stats.clientes > 0 ? 100 : 0}
             />
-            <DashboardStats
+            <DashboardStatsVisual
               title="Repuestos"
               value={loading ? "-" : stats.repuestos.toString()}
-              description={loading ? "" : `${stats.repuestosBajoStock} con stock bajo`}
-              icon={<Package className="h-4 w-4 text-muted-foreground" />}
+              description={`${stats.repuestosBajoStock} con stock bajo`}
+              icon={<Package className="h-8 w-8 text-red-500" />}
+              color="bg-red-100"
+              progress={stats.repuestos > 0 ? Math.round((stats.repuestosBajoStock / stats.repuestos) * 100) : 0}
             />
           </div>
 
           {/* Tarjetas de navegación */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Proformas</CardTitle>
-                <CardDescription>Gestiona y visualiza las proformas</CardDescription>
+            {/* Proformas */}
+            <Card className="transition-transform hover:scale-105 hover:shadow-lg bg-blue-50 flex flex-col justify-between min-h-[270px]">
+              <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
+                <FileText className="h-12 w-12 text-blue-600 mb-2" />
+                <CardTitle className="text-xl text-center">Proformas</CardTitle>
+                <CardDescription className="text-center">Gestiona y visualiza las proformas</CardDescription>
               </CardHeader>
-              <CardFooter>
-                <Link href="/proformas">
+              <CardFooter className="flex justify-center pb-4">
+                <Link href="/proformas" className="w-full">
                   <Button variant="default" className="w-full">Ir a Proformas</Button>
                 </Link>
               </CardFooter>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Clientes</CardTitle>
-                <CardDescription>Gestiona la información de tus clientes</CardDescription>
+            {/* Clientes */}
+            <Card className="transition-transform hover:scale-105 hover:shadow-lg bg-green-50 flex flex-col justify-between min-h-[270px]">
+              <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
+                <Users className="h-12 w-12 text-green-600 mb-2" />
+                <CardTitle className="text-xl text-center">Clientes</CardTitle>
+                <CardDescription className="text-center">Gestiona la información de tus clientes</CardDescription>
               </CardHeader>
-              <CardFooter>
-                <Link href="/clientes">
+              <CardFooter className="flex justify-center pb-4">
+                <Link href="/clientes" className="w-full">
                   <Button variant="default" className="w-full">Ir a Clientes</Button>
                 </Link>
               </CardFooter>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Inventario de Repuestos</CardTitle>
-                <CardDescription>Gestiona tu inventario de repuestos</CardDescription>
+            {/* Repuestos */}
+            <Card className="transition-transform hover:scale-105 hover:shadow-lg bg-red-50 flex flex-col justify-between min-h-[270px]">
+              <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
+                <Package className="h-12 w-12 text-red-500 mb-2" />
+                <CardTitle className="text-xl text-center">Inventario de Repuestos</CardTitle>
+                <CardDescription className="text-center">Gestiona tu inventario de repuestos</CardDescription>
               </CardHeader>
-              <CardFooter>
-                <Link href="/repuestos">
+              <CardFooter className="flex justify-center pb-4">
+                <Link href="/repuestos" className="w-full">
                   <Button variant="default" className="w-full">Ir a Repuestos</Button>
                 </Link>
               </CardFooter>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Vehículos</CardTitle>
-                <CardDescription>Gestiona la información de vehículos</CardDescription>
+            {/* Vehículos */}
+            <Card className="transition-transform hover:scale-105 hover:shadow-lg bg-yellow-50 flex flex-col justify-between min-h-[270px]">
+              <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
+                <CalendarDays className="h-12 w-12 text-yellow-500 mb-2" />
+                <CardTitle className="text-xl text-center">Vehículos</CardTitle>
+                <CardDescription className="text-center">Gestiona la información de vehículos</CardDescription>
               </CardHeader>
-              <CardFooter>
-                <Link href="/vehiculos">
+              <CardFooter className="flex justify-center pb-4">
+                <Link href="/vehiculos" className="w-full">
                   <Button variant="default" className="w-full">Ir a Vehículos</Button>
                 </Link>
               </CardFooter>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Entidades</CardTitle>
-                <CardDescription>Gestiona la información de tu empresa y sucursales</CardDescription>
+            {/* Entidades */}
+            <Card className="transition-transform hover:scale-105 hover:shadow-lg bg-purple-50 flex flex-col justify-between min-h-[270px]">
+              <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
+                <FileText className="h-12 w-12 text-purple-600 mb-2" />
+                <CardTitle className="text-xl text-center">Entidades</CardTitle>
+                <CardDescription className="text-center">Gestiona la información de tu empresa y sucursales</CardDescription>
               </CardHeader>
-              <CardFooter>
-                <Link href="/entidades">
+              <CardFooter className="flex justify-center pb-4">
+                <Link href="/entidades" className="w-full">
                   <Button variant="default" className="w-full">Ir a Entidades</Button>
                 </Link>
               </CardFooter>
