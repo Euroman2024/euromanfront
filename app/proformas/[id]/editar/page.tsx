@@ -418,8 +418,8 @@ export default function EditarProformaPage() {
                   <Input
                     id="numero"
                     value={formData?.numeroProforma ?? ""}
-                    onChange={(e) => setFormData((prev: typeof formData) => ({ ...prev, numeroProforma: e.target.value }))}
-                    className={errors.numeroProforma ? "border-red-500" : ""}
+                    readOnly
+                    className={errors.numeroProforma ? "border-red-500" : "bg-gray-100 cursor-not-allowed"}
                   />
                   {errors.numeroProforma && <p className="text-sm text-red-500">{errors.numeroProforma}</p>}
                 </div>
