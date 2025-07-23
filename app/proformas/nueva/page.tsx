@@ -56,8 +56,30 @@ export default function NuevaProformaPage() {
   const router = useRouter()
 
   // Estados básicos
-  const [numeroProforma, setNumeroProforma] = useState("PRO-2024-001")
+  const [numeroProforma, setNumeroProforma] = useState("")
   const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0])
+
+  // Asignar número automáticamente
+  useEffect(() => {
+    const asignarNumero = async () => {
+      const proformas = await apiProformas.list();
+      // Buscar el número mayor
+      let maxNum = 0;
+      proformas.forEach((p: any) => {
+        // Extraer número, asumiendo formato PRO-2024-001
+        const match = p.numero && p.numero.match(/(\d+)$/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      });
+      // Generar siguiente número
+      const nextNum = (maxNum + 1).toString().padStart(3, "0");
+      const year = new Date().getFullYear();
+      setNumeroProforma(`PRO-${year}-${nextNum}`);
+    };
+    asignarNumero();
+  }, []);
   const [clienteId, setClienteId] = useState("")
   const [vehiculoId, setVehiculoId] = useState("")
   const [km, setKm] = useState("")
@@ -322,8 +344,8 @@ export default function NuevaProformaPage() {
                   <Label>Número de Proforma *</Label>
                   <Input
                     value={numeroProforma}
-                    onChange={(e) => setNumeroProforma(e.target.value)}
-                    className={errors.numeroProforma ? "border-red-500" : ""}
+                    readOnly
+                    className={errors.numeroProforma ? "border-red-500" : "bg-gray-100 cursor-not-allowed"}
                   />
                   {errors.numeroProforma && <p className="text-sm text-red-500">{errors.numeroProforma}</p>}
                 </div>
