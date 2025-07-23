@@ -103,6 +103,13 @@ export default function NuevaProformaPage() {
   const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState<Vehiculo | null>(null)
   const [repuestosFiltrados, setRepuestosFiltrados] = useState<Repuesto[]>([])
 
+  // Estados para modal de nuevo cliente/vehículo
+  const [showNuevoClienteModal, setShowNuevoClienteModal] = useState(false)
+  const [nuevoCliente, setNuevoCliente] = useState({ nombre: '', ruc: '', direccion: '', telefono: '', email: '' })
+  const [nuevoVehiculo, setNuevoVehiculo] = useState({ marca: '', modelo: '', anio: '', placa: '', color: '' })
+  const [loadingNuevoCliente, setLoadingNuevoCliente] = useState(false)
+  const [errorNuevoCliente, setErrorNuevoCliente] = useState('')
+
   // Estados UI
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -366,18 +373,23 @@ export default function NuevaProformaPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label>Cliente *</Label>
-                  <Select value={clienteId} onValueChange={handleClienteChange}>
-                    <SelectTrigger className={errors.clienteId ? "border-red-500" : ""}>
-                      <SelectValue placeholder="Seleccionar cliente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clientes.map((cliente) => (
-                        <SelectItem key={cliente.id} value={cliente.id.toString()}>
-                          {cliente.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2 items-center">
+                    <Select value={clienteId} onValueChange={handleClienteChange}>
+                      <SelectTrigger className={errors.clienteId ? "border-red-500" : ""}>
+                        <SelectValue placeholder="Seleccionar cliente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clientes.map((cliente) => (
+                          <SelectItem key={cliente.id} value={cliente.id.toString()}>
+                            {cliente.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowNuevoClienteModal(true)}>
+                      + Nuevo
+                    </Button>
+                  </div>
                   {errors.clienteId && <p className="text-sm text-red-500">{errors.clienteId}</p>}
 
                   {clienteSeleccionado && (
@@ -439,6 +451,104 @@ export default function NuevaProformaPage() {
               </div>
             </CardContent>
           </Card>
+
+      {/* Modal para nuevo cliente y vehículo */}
+      {showNuevoClienteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={() => setShowNuevoClienteModal(false)}>
+              <X className="h-5 w-5" />
+            </button>
+            <h2 className="text-lg font-bold mb-2">Nuevo Cliente y Vehículo</h2>
+            {errorNuevoCliente && errorNuevoCliente.startsWith('<') ? (
+              <div className="mb-2 p-2 border border-red-300 bg-red-50 rounded text-xs overflow-auto" dangerouslySetInnerHTML={{ __html: errorNuevoCliente }} />
+            ) : errorNuevoCliente && (
+              <p className="text-sm text-red-500 mb-2">{errorNuevoCliente}</p>
+            )}
+            <div className="grid gap-4 md:grid-cols-2 mb-4">
+              <div>
+                <Label>Nombre *</Label>
+                <Input value={nuevoCliente.nombre} onChange={e => setNuevoCliente({ ...nuevoCliente, nombre: e.target.value })} />
+              </div>
+              <div>
+                <Label>RUC *</Label>
+                <Input value={nuevoCliente.ruc} onChange={e => setNuevoCliente({ ...nuevoCliente, ruc: e.target.value })} />
+              </div>
+              <div>
+                <Label>Dirección</Label>
+                <Input value={nuevoCliente.direccion} onChange={e => setNuevoCliente({ ...nuevoCliente, direccion: e.target.value })} />
+              </div>
+              <div>
+                <Label>Teléfono</Label>
+                <Input value={nuevoCliente.telefono} onChange={e => setNuevoCliente({ ...nuevoCliente, telefono: e.target.value })} />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input value={nuevoCliente.email} onChange={e => setNuevoCliente({ ...nuevoCliente, email: e.target.value })} />
+              </div>
+            </div>
+            <h3 className="font-semibold mb-2 mt-2">Vehículo</h3>
+            <div className="grid gap-4 md:grid-cols-2 mb-4">
+              <div>
+                <Label>Marca *</Label>
+                <Input value={nuevoVehiculo.marca} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, marca: e.target.value })} />
+              </div>
+              <div>
+                <Label>Modelo *</Label>
+                <Input value={nuevoVehiculo.modelo} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, modelo: e.target.value })} />
+              </div>
+              <div>
+                <Label>Año *</Label>
+                <Input value={nuevoVehiculo.anio} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, anio: e.target.value })} />
+              </div>
+              <div>
+                <Label>Placa *</Label>
+                <Input value={nuevoVehiculo.placa} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, placa: e.target.value })} />
+              </div>
+              <div>
+                <Label>Color</Label>
+                <Input value={nuevoVehiculo.color} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, color: e.target.value })} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowNuevoClienteModal(false)}>Cancelar</Button>
+              <Button onClick={async () => {
+                setLoadingNuevoCliente(true)
+                setErrorNuevoCliente('')
+                // Validar
+                if (!nuevoCliente.nombre.trim() || !nuevoCliente.ruc.trim() || !nuevoVehiculo.marca.trim() || !nuevoVehiculo.modelo.trim() || !nuevoVehiculo.anio.trim() || !nuevoVehiculo.placa.trim()) {
+                  setErrorNuevoCliente('Completa todos los campos obligatorios')
+                  setLoadingNuevoCliente(false)
+                  return
+                }
+                try {
+                  // Crear cliente
+                  const clienteCreado = await apiClientes.create(nuevoCliente)
+                  if (!clienteCreado || !clienteCreado.id) throw new Error('No se pudo crear el cliente')
+                  // Crear vehículo
+                  const vehiculoCreado = await apiVehiculos.create({ ...nuevoVehiculo, cliente_id: clienteCreado.id })
+                  if (!vehiculoCreado || !vehiculoCreado.id) throw new Error('No se pudo crear el vehículo')
+                  // Actualizar listas y seleccionar
+                  setClientes(prev => [...prev, clienteCreado])
+                  setVehiculos(prev => [...prev, vehiculoCreado])
+                  setClienteId(clienteCreado.id.toString())
+                  setVehiculoId(vehiculoCreado.id.toString())
+                  setShowNuevoClienteModal(false)
+                  setNuevoCliente({ nombre: '', ruc: '', direccion: '', telefono: '', email: '' })
+                  setNuevoVehiculo({ marca: '', modelo: '', anio: '', placa: '', color: '' })
+                } catch (err: any) {
+                  console.error('Error al crear cliente o vehículo:', err)
+                  setErrorNuevoCliente(err?.message || (typeof err === 'string' ? err : 'Error al crear cliente o vehículo'))
+                } finally {
+                  setLoadingNuevoCliente(false)
+                }
+              }} disabled={loadingNuevoCliente}>
+                {loadingNuevoCliente ? 'Guardando...' : 'Guardar'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
           {/* Agregar Repuestos */}
           <Card>
