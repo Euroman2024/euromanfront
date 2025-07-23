@@ -102,9 +102,9 @@ export default function Home() {
           {/* Tarjetas de navegación */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
             {/* Proformas */}
-            <Card className="transition-transform hover:scale-105 hover:shadow-lg bg-blue-50 flex flex-col justify-between min-h-[270px]">
+            <Card className="bg-blue-50 flex flex-col justify-between min-h-[270px] transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-translate-y-2 hover:bg-blue-200">
               <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
-                <FileText className="h-12 w-12 text-blue-600 mb-2" />
+                <FileText className="h-12 w-12 text-blue-600 mb-2 transition-colors duration-300 group-hover:text-blue-900" />
                 <CardTitle className="text-xl text-center">Proformas</CardTitle>
                 <CardDescription className="text-center">Gestiona y visualiza las proformas</CardDescription>
               </CardHeader>
@@ -115,9 +115,9 @@ export default function Home() {
               </CardFooter>
             </Card>
             {/* Clientes */}
-            <Card className="transition-transform hover:scale-105 hover:shadow-lg bg-green-50 flex flex-col justify-between min-h-[270px]">
+            <Card className="bg-green-50 flex flex-col justify-between min-h-[270px] transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-translate-y-2 hover:bg-green-200">
               <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
-                <Users className="h-12 w-12 text-green-600 mb-2" />
+                <Users className="h-12 w-12 text-green-600 mb-2 transition-colors duration-300 group-hover:text-green-900" />
                 <CardTitle className="text-xl text-center">Clientes</CardTitle>
                 <CardDescription className="text-center">Gestiona la información de tus clientes</CardDescription>
               </CardHeader>
@@ -128,9 +128,9 @@ export default function Home() {
               </CardFooter>
             </Card>
             {/* Repuestos */}
-            <Card className="transition-transform hover:scale-105 hover:shadow-lg bg-red-50 flex flex-col justify-between min-h-[270px]">
+            <Card className="bg-red-50 flex flex-col justify-between min-h-[270px] transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-translate-y-2 hover:bg-red-200">
               <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
-                <Package className="h-12 w-12 text-red-500 mb-2" />
+                <Package className="h-12 w-12 text-red-500 mb-2 transition-colors duration-300 group-hover:text-red-900" />
                 <CardTitle className="text-xl text-center">Inventario de Repuestos</CardTitle>
                 <CardDescription className="text-center">Gestiona tu inventario de repuestos</CardDescription>
               </CardHeader>
@@ -141,9 +141,9 @@ export default function Home() {
               </CardFooter>
             </Card>
             {/* Vehículos */}
-            <Card className="transition-transform hover:scale-105 hover:shadow-lg bg-yellow-50 flex flex-col justify-between min-h-[270px]">
+            <Card className="bg-yellow-50 flex flex-col justify-between min-h-[270px] transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-translate-y-2 hover:bg-yellow-200">
               <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
-                <CalendarDays className="h-12 w-12 text-yellow-500 mb-2" />
+                <CalendarDays className="h-12 w-12 text-yellow-500 mb-2 transition-colors duration-300 group-hover:text-yellow-900" />
                 <CardTitle className="text-xl text-center">Vehículos</CardTitle>
                 <CardDescription className="text-center">Gestiona la información de vehículos</CardDescription>
               </CardHeader>
@@ -154,9 +154,9 @@ export default function Home() {
               </CardFooter>
             </Card>
             {/* Entidades */}
-            <Card className="transition-transform hover:scale-105 hover:shadow-lg bg-purple-50 flex flex-col justify-between min-h-[270px]">
+            <Card className="bg-purple-50 flex flex-col justify-between min-h-[270px] transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-translate-y-2 hover:bg-purple-200">
               <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
-                <FileText className="h-12 w-12 text-purple-600 mb-2" />
+                <FileText className="h-12 w-12 text-purple-600 mb-2 transition-colors duration-300 group-hover:text-purple-900" />
                 <CardTitle className="text-xl text-center">Entidades</CardTitle>
                 <CardDescription className="text-center">Gestiona la información de tu empresa y sucursales</CardDescription>
               </CardHeader>
