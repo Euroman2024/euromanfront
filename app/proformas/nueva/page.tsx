@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@/components/ui/textarea" // <--- CORREGIDO AQUÍ
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -53,10 +53,7 @@ interface ItemProforma {
 }
 
 export default function NuevaProformaPage() {
-  // Ref para detectar nuevo cliente y vehículo creados (debe estar dentro del componente)
-  const nuevoClienteIdRef = useRef<string | null>(null)
-  const nuevoVehiculoIdRef = useRef<string | null>(null)
-  // Estados principales (restaurados)
+  // Estados principales
   const [clienteId, setClienteId] = useState("");
   const [vehiculoId, setVehiculoId] = useState("");
   const [km, setKm] = useState("");
@@ -77,42 +74,62 @@ export default function NuevaProformaPage() {
   useEffect(() => {
     const asignarNumero = async () => {
       const proformas = await apiProformas.list();
-      // Buscar el número mayor
       let maxNum = 0;
       proformas.forEach((p: any) => {
-        // Extraer número, asumiendo formato PRO-2024-001
         const match = p.numero && p.numero.match(/(\d+)$/);
         if (match) {
           const num = parseInt(match[1], 10);
           if (num > maxNum) maxNum = num;
         }
       });
-      // Generar siguiente número
       const nextNum = (maxNum + 1).toString().padStart(3, "0");
       const year = new Date().getFullYear();
       setNumeroProforma(`PRO-${year}-${nextNum}`);
     };
     asignarNumero();
   }, []);
-  // useEffect para sincronizar selección y filtrado tras crear cliente/vehículo
+
+  // Estados derivados (definidos aquí para asegurar que siempre existan)
+  const [vehiculosFiltrados, setVehiculosFiltrados] = useState<Vehiculo[]>([]);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null);
+  const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState<Vehiculo | null>(null);
+
+  // Sincronizar clienteSeleccionado y vehiculosFiltrados cuando clientes o clienteId cambian
   useEffect(() => {
-    if (nuevoClienteIdRef.current && nuevoVehiculoIdRef.current) {
-      const valueCliente = nuevoClienteIdRef.current
-      const valueVehiculo = nuevoVehiculoIdRef.current
-      const cliente = clientes.find((c) => c.id.toString() === valueCliente) || null
-      setClienteId(valueCliente)
-      setClienteSeleccionado(cliente)
-      const vehiculosCliente = vehiculos.filter((v) => v.cliente_id?.toString() === valueCliente)
-      setVehiculosFiltrados(vehiculosCliente)
-      setVehiculoId(valueVehiculo)
-      const vehiculo = vehiculosCliente.find((v) => v.id.toString() === valueVehiculo) || null
-      setVehiculoSeleccionado(vehiculo)
-      // Limpiar los refs para evitar repeticiones
-      nuevoClienteIdRef.current = null
-      nuevoVehiculoIdRef.current = null
+    const cliente = clientes.find((c) => c.id.toString() === clienteId) || null;
+    setClienteSeleccionado(cliente);
+
+    const vehiculosCliente = vehiculos.filter((v) => v.cliente_id?.toString() === clienteId);
+    setVehiculosFiltrados(vehiculosCliente);
+
+    // Asegurarse de que el vehículo seleccionado siga siendo válido para el nuevo cliente
+    // Opcionalmente, si hay un solo vehículo para el nuevo cliente, seleccionarlo automáticamente
+    if (vehiculoId && !vehiculosCliente.some(v => v.id.toString() === vehiculoId)) {
+      setVehiculoId("");
+      setVehiculoSeleccionado(null);
+    } else if (vehiculoId) { // Si ya hay un vehiculoId, asegúrate de que el objeto esté bien seteado
+      setVehiculoSeleccionado(vehiculosCliente.find(v => v.id.toString() === vehiculoId) || null);
+    } else if (vehiculosCliente.length === 1) { // Si solo hay un vehículo para el cliente, seleccionarlo
+        setVehiculoId(vehiculosCliente[0].id.toString());
+        setVehiculoSeleccionado(vehiculosCliente[0]);
+    } else { // Si no hay vehiculoId y múltiples vehiculos, deseleccionar
+        setVehiculoSeleccionado(null);
     }
-  }, [clientes, vehiculos])
-  // Sincronizar clienteSeleccionado cuando clientes o clienteId cambian
+  }, [clienteId, clientes, vehiculos]);
+
+  // Sincronizar vehiculoSeleccionado cuando vehiculoId cambia (y vehiculosFiltrados ya se ha actualizado)
+  // Este useEffect es menos propenso a errores ahora porque vehiculosFiltrados ya es manejado
+  // en el useEffect anterior cuando clienteId cambia.
+  useEffect(() => {
+    // Solo busca si vehiculosFiltrados tiene elementos y vehiculoId está seteado
+    if (vehiculoId && vehiculosFiltrados.length > 0) {
+        const vehiculo = vehiculosFiltrados.find((v) => v.id.toString() === vehiculoId) || null;
+        setVehiculoSeleccionado(vehiculo);
+    } else if (!vehiculoId) { // Si vehiculoId se vacía, asegurar que vehiculoSeleccionado sea null
+        setVehiculoSeleccionado(null);
+    }
+  }, [vehiculoId, vehiculosFiltrados]); // Depende de vehiculosFiltrados para asegurar orden
+
 
   // Estados para búsqueda
   const [busquedaRepuesto, setBusquedaRepuesto] = useState("")
@@ -120,10 +137,6 @@ export default function NuevaProformaPage() {
   const [cantidad, setCantidad] = useState(1)
   const [mostrarLista, setMostrarLista] = useState(false)
 
-  // Estados derivados
-  const [vehiculosFiltrados, setVehiculosFiltrados] = useState<Vehiculo[]>([])
-  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null)
-  const [vehiculoSeleccionado, setVehiculoSeleccionado] = useState<Vehiculo | null>(null)
   const [repuestosFiltrados, setRepuestosFiltrados] = useState<Repuesto[]>([])
 
   // Estados para modal de nuevo cliente/vehículo
@@ -175,19 +188,11 @@ export default function NuevaProformaPage() {
   // Manejar cambio de cliente
   const handleClienteChange = (value: string) => {
     setClienteId(value)
-    setVehiculoId("")
-    setVehiculoSeleccionado(null)
-    const cliente = clientes.find((c) => c.id.toString() === value) || null
-    setClienteSeleccionado(cliente)
-    // Filtrar usando cliente_id (dato real)
-    const vehiculosCliente = vehiculos.filter((v) => v.cliente_id?.toString() === value)
-    setVehiculosFiltrados(vehiculosCliente)
+    // El useEffect de clienteId ahora se encargará de actualizar vehiculosFiltrados y vehiculoSeleccionado
   }
 
   const handleVehiculoChange = (value: string) => {
     setVehiculoId(value)
-    const vehiculo = vehiculosFiltrados.find((v) => v.id.toString() === value) || null
-    setVehiculoSeleccionado(vehiculo)
   }
 
   const seleccionarRepuesto = (repuesto: Repuesto) => {
@@ -419,10 +424,10 @@ export default function NuevaProformaPage() {
                     clienteSeleccionado.nombre && clienteSeleccionado.ruc ? (
                       <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
                         <p>
-                          <strong>RUC:</strong> {clienteSeleccionado.ruc}
+                          RUC: {clienteSeleccionado.ruc}
                         </p>
                         <p>
-                          <strong>Teléfono:</strong> {clienteSeleccionado.telefono}
+                          Teléfono: {clienteSeleccionado.telefono}
                         </p>
                       </div>
                     ) : null
@@ -448,10 +453,10 @@ export default function NuevaProformaPage() {
                   {vehiculoSeleccionado && (
                     <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
                       <p>
-                        <strong>Año:</strong> {vehiculoSeleccionado.anio}
+                        Año: {vehiculoSeleccionado.anio}
                       </p>
                       <p>
-                        <strong>Color:</strong> {vehiculoSeleccionado.color}
+                        Color: {vehiculoSeleccionado.color}
                       </p>
                     </div>
                   )}
@@ -477,130 +482,130 @@ export default function NuevaProformaPage() {
             </CardContent>
           </Card>
 
-      {/* Modal para nuevo cliente y vehículo */}
-      {showNuevoClienteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={() => setShowNuevoClienteModal(false)}>
-              <X className="h-5 w-5" />
-            </button>
-            <h2 className="text-lg font-bold mb-2">Nuevo Cliente y Vehículo</h2>
-            {errorNuevoCliente && errorNuevoCliente.startsWith('<') ? (
-              <div className="mb-2 p-2 border border-red-300 bg-red-50 rounded text-xs overflow-auto" dangerouslySetInnerHTML={{ __html: errorNuevoCliente }} />
-            ) : errorNuevoCliente && (
-              <p className="text-sm text-red-500 mb-2">{errorNuevoCliente}</p>
-            )}
-            <div className="grid gap-4 md:grid-cols-2 mb-4">
-              <div>
-                <Label>Nombre *</Label>
-                <Input value={nuevoCliente.nombre} onChange={e => setNuevoCliente({ ...nuevoCliente, nombre: e.target.value })} />
-              </div>
-              <div>
-                <Label>RUC *</Label>
-                <Input value={nuevoCliente.ruc} onChange={e => setNuevoCliente({ ...nuevoCliente, ruc: e.target.value })} />
-              </div>
-              <div>
-                <Label>Dirección</Label>
-                <Input value={nuevoCliente.direccion} onChange={e => setNuevoCliente({ ...nuevoCliente, direccion: e.target.value })} />
-              </div>
-              <div>
-                <Label>Teléfono</Label>
-                <Input value={nuevoCliente.telefono} onChange={e => setNuevoCliente({ ...nuevoCliente, telefono: e.target.value })} />
-              </div>
-              <div>
-                <Label>Email</Label>
-                <Input value={nuevoCliente.email} onChange={e => setNuevoCliente({ ...nuevoCliente, email: e.target.value })} />
+          {/* Modal para nuevo cliente y vehículo */}
+          {showNuevoClienteModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+                <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={() => setShowNuevoClienteModal(false)}>
+                  <X className="h-5 w-5" />
+                </button>
+                <h2 className="text-lg font-bold mb-2">Nuevo Cliente y Vehículo</h2>
+                {errorNuevoCliente && errorNuevoCliente.startsWith('<') ? (
+                  <div className="mb-2 p-2 border border-red-300 bg-red-50 rounded text-xs overflow-auto" dangerouslySetInnerHTML={{ __html: errorNuevoCliente }} />
+                ) : errorNuevoCliente && (
+                  <p className="text-sm text-red-500 mb-2">{errorNuevoCliente}</p>
+                )}
+                <div className="grid gap-4 md:grid-cols-2 mb-4">
+                  <div>
+                    <Label>Nombre *</Label>
+                    <Input value={nuevoCliente.nombre} onChange={e => setNuevoCliente({ ...nuevoCliente, nombre: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>RUC *</Label>
+                    <Input value={nuevoCliente.ruc} onChange={e => setNuevoCliente({ ...nuevoCliente, ruc: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Dirección</Label>
+                    <Input value={nuevoCliente.direccion} onChange={e => setNuevoCliente({ ...nuevoCliente, direccion: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Teléfono</Label>
+                    <Input value={nuevoCliente.telefono} onChange={e => setNuevoCliente({ ...nuevoCliente, telefono: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <Input value={nuevoCliente.email} onChange={e => setNuevoCliente({ ...nuevoCliente, email: e.target.value })} />
+                  </div>
+                </div>
+                <h3 className="font-semibold mb-2 mt-2">Vehículo</h3>
+                <div className="grid gap-4 md:grid-cols-2 mb-4">
+                  <div>
+                    <Label>Marca *</Label>
+                    <Input value={nuevoVehiculo.marca} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, marca: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Modelo *</Label>
+                    <Input value={nuevoVehiculo.modelo} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, modelo: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Año *</Label>
+                    <Input value={nuevoVehiculo.anio} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, anio: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Placa *</Label>
+                    <Input value={nuevoVehiculo.placa} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, placa: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Color</Label>
+                    <Input value={nuevoVehiculo.color} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, color: e.target.value })} />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setShowNuevoClienteModal(false)}>Cancelar</Button>
+                  <Button onClick={async () => {
+                    setLoadingNuevoCliente(true);
+                    setErrorNuevoCliente("");
+                    // Validación simple
+                    if (!nuevoCliente.nombre.trim() || !nuevoCliente.ruc.trim() || !nuevoVehiculo.marca.trim() || !nuevoVehiculo.modelo.trim() || !nuevoVehiculo.anio.trim() || !nuevoVehiculo.placa.trim()) {
+                      setErrorNuevoCliente("Completa todos los campos obligatorios");
+                      setLoadingNuevoCliente(false);
+                      return;
+                    }
+                    try {
+                      // Crear cliente
+                      const clienteCreado = await apiClientes.create(nuevoCliente);
+                      if (!clienteCreado || !clienteCreado.id) throw new Error("No se pudo crear el cliente");
+                      // Crear vehículo
+                      const vehiculoCreado = await apiVehiculos.create({ ...nuevoVehiculo, cliente_id: clienteCreado.id });
+                      if (!vehiculoCreado || !vehiculoCreado.id) throw new Error("No se pudo crear el vehículo");
+
+                      // Recargar listas completas desde la API para asegurar datos correctos
+                      const clientesActualizados = await apiClientes.list();
+                      const vehiculosActualizados = await apiVehiculos.list();
+
+                      // Actualizar clientes state
+                      const finalClientes = [...clientesActualizados, clienteCreado]
+                        .filter((c: Cliente, idx: number, arr: Cliente[]) => arr.findIndex((x: Cliente) => x.id === c.id) === idx)
+                        .filter((c: Cliente) => c.nombre && c.ruc);
+                      setClientes(finalClientes);
+
+                      // Update vehicles state
+                      const finalVehiculos = [...vehiculosActualizados, vehiculoCreado]
+                        .filter((v, idx, arr) => arr.findIndex(x => x.id === v.id) === idx);
+                      setVehiculos(finalVehiculos);
+
+                      // --- INICIO: Actualizaciones cruciales e inmediatas de estado para mostrar los datos ---
+                      // Seleccionar el cliente y vehículo recién creados
+                      setClienteId(clienteCreado.id.toString());
+                      setClienteSeleccionado(clienteCreado); // <-- ¡Importante! Asigna el objeto completo directamente
+
+                      // Filtrar vehículos del cliente y asegurar solo uno por id
+                      // Asegúrate de que vehiculosForNewClient se calcule a partir de finalVehiculos
+                      const vehiculosForNewClient = finalVehiculos
+                        .filter((v: Vehiculo) => v.cliente_id === clienteCreado.id)
+                        .filter((v: Vehiculo) => v.marca && v.modelo && v.placa); // Mantén este filtro si es necesario
+                      setVehiculosFiltrados(vehiculosForNewClient); // Actualiza la lista filtrada
+
+                      setVehiculoId(vehiculoCreado.id.toString());
+                      setVehiculoSeleccionado(vehiculoCreado); // <-- ¡Importante! Asigna el objeto completo directamente
+                      // --- FIN: Actualizaciones cruciales ---
+
+                      // Cerrar modal y limpiar
+                      setShowNuevoClienteModal(false);
+                      setNuevoCliente({ nombre: '', ruc: '', direccion: '', telefono: '', email: '' });
+                      setNuevoVehiculo({ marca: '', modelo: '', anio: '', placa: '', color: '' });
+                    } catch (err: any) {
+                      setErrorNuevoCliente(err?.message || (typeof err === "string" ? err : "Error al crear cliente o vehículo"));
+                    } finally {
+                      setLoadingNuevoCliente(false);
+                    }
+                  }} disabled={loadingNuevoCliente}>
+                    {loadingNuevoCliente ? "Guardando..." : "Guardar"}
+                  </Button>
+                </div>
               </div>
             </div>
-            <h3 className="font-semibold mb-2 mt-2">Vehículo</h3>
-            <div className="grid gap-4 md:grid-cols-2 mb-4">
-              <div>
-                <Label>Marca *</Label>
-                <Input value={nuevoVehiculo.marca} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, marca: e.target.value })} />
-              </div>
-              <div>
-                <Label>Modelo *</Label>
-                <Input value={nuevoVehiculo.modelo} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, modelo: e.target.value })} />
-              </div>
-              <div>
-                <Label>Año *</Label>
-                <Input value={nuevoVehiculo.anio} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, anio: e.target.value })} />
-              </div>
-              <div>
-                <Label>Placa *</Label>
-                <Input value={nuevoVehiculo.placa} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, placa: e.target.value })} />
-              </div>
-              <div>
-                <Label>Color</Label>
-                <Input value={nuevoVehiculo.color} onChange={e => setNuevoVehiculo({ ...nuevoVehiculo, color: e.target.value })} />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowNuevoClienteModal(false)}>Cancelar</Button>
-              <Button onClick={async () => {
-                setLoadingNuevoCliente(true);
-                setErrorNuevoCliente("");
-                // Validación simple
-                if (!nuevoCliente.nombre.trim() || !nuevoCliente.ruc.trim() || !nuevoVehiculo.marca.trim() || !nuevoVehiculo.modelo.trim() || !nuevoVehiculo.anio.trim() || !nuevoVehiculo.placa.trim()) {
-                  setErrorNuevoCliente("Completa todos los campos obligatorios");
-                  setLoadingNuevoCliente(false);
-                  return;
-                }
-                try {
-                  // Crear cliente
-                  const clienteCreado = await apiClientes.create(nuevoCliente);
-                  if (!clienteCreado || !clienteCreado.id) throw new Error("No se pudo crear el cliente");
-                  // Crear vehículo
-                  const vehiculoCreado = await apiVehiculos.create({ ...nuevoVehiculo, cliente_id: clienteCreado.id });
-                  if (!vehiculoCreado || !vehiculoCreado.id) throw new Error("No se pudo crear el vehículo");
-
-                  // Recargar listas completas desde la API para asegurar datos correctos
-                  const clientesActualizados = await apiClientes.list();
-                  const vehiculosActualizados = await apiVehiculos.list();
-
-                  // Actualizar clientes (sin duplicados)
-                  // Filtrar solo clientes con datos completos (nombre y ruc)
-                  const clientesFinales = [...clientesActualizados, clienteCreado]
-                    .filter((c: Cliente, idx: number, arr: Cliente[]) => arr.findIndex((x: Cliente) => x.id === c.id) === idx)
-                    .filter((c: Cliente) => c.nombre && c.ruc);
-                  setClientes(clientesFinales);
-
-                  // Actualizar vehículos (sin duplicados)
-                  // Unir y filtrar por id para asegurar unicidad absoluta
-                  const vehiculosUnicos: Vehiculo[] = [...vehiculosActualizados, vehiculoCreado]
-                    .filter((v, idx, arr) => arr.findIndex(x => x.id === v.id) === idx);
-                  setVehiculos(vehiculosUnicos);
-
-                  // Seleccionar el cliente y vehículo recién creados
-                  setClienteId(clienteCreado.id.toString());
-                  setClienteSeleccionado(clienteCreado);
-
-                  // Filtrar vehículos del cliente y asegurar solo uno por id
-                  // Filtrar solo vehículos con datos completos (marca, modelo, placa)
-                  const vehiculosClienteUnicos = vehiculosUnicos
-                    .filter((v: Vehiculo) => v.cliente_id === clienteCreado.id)
-                    .filter((v: Vehiculo) => v.marca && v.modelo && v.placa);
-                  setVehiculosFiltrados(vehiculosClienteUnicos);
-
-                  setVehiculoId(vehiculoCreado.id.toString());
-                  setVehiculoSeleccionado(vehiculoCreado);
-
-                  // Cerrar modal y limpiar
-                  setShowNuevoClienteModal(false);
-                  setNuevoCliente({ nombre: '', ruc: '', direccion: '', telefono: '', email: '' });
-                  setNuevoVehiculo({ marca: '', modelo: '', anio: '', placa: '', color: '' });
-                } catch (err: any) {
-                  setErrorNuevoCliente(err?.message || (typeof err === "string" ? err : "Error al crear cliente o vehículo"));
-                } finally {
-                  setLoadingNuevoCliente(false);
-                }
-              }} disabled={loadingNuevoCliente}>
-                {loadingNuevoCliente ? "Guardando..." : "Guardar"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+          )}
 
           {/* Agregar Repuestos */}
           <Card>
@@ -758,17 +763,10 @@ export default function NuevaProformaPage() {
                             />
                           </TableCell>
                           <TableCell className="text-right">${Number(item.precio).toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-medium">
-                            ${(item.cantidad * Number(item.precio)).toFixed(2)}
-                          </TableCell>
+                          <TableCell className="text-right">${(item.cantidad * item.precio).toFixed(2)}</TableCell>
                           <TableCell className="text-center">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => eliminarItem(item.id)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
+                            <Button variant="ghost" size="icon" onClick={() => eliminarItem(item.id)}>
+                              <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -779,79 +777,58 @@ export default function NuevaProformaPage() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Notas */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Información Adicional</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label>Nota importante</Label>
-                  <Textarea rows={3} value={notaAviso} onChange={(e) => setNotaAviso(e.target.value)} />
-                </div>
-                <div>
-                  <Label>Términos y condiciones</Label>
-                  <Textarea rows={3} value={aviso} onChange={(e) => setAviso(e.target.value)} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Panel lateral - Resumen */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-6">
+        {/* Totales y notas */}
+        <div className="lg:col-span-1 space-y-6">
+          <Card>
             <CardHeader>
               <CardTitle>Resumen</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Items:</span>
-                  <span>{items.length}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Unidades:</span>
-                  <span>{items.reduce((sum, item) => sum + item.cantidad, 0)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal:</span>
-                  <span>${subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">IVA (12%):</span>
-                  <span>${iva.toFixed(2)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between font-bold text-lg">
-                  <span>Total:</span>
-                  <span>${total.toFixed(2)}</span>
-                </div>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between font-medium">
+                <span>Subtotal:</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-medium">
+                <span>IVA (12%):</span>
+                <span>${iva.toFixed(2)}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-bold text-lg">
+                <span>TOTAL:</span>
+                <span>${total.toFixed(2)}</span>
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col gap-2">
-              <Button className="w-full" onClick={guardarProforma} disabled={loading || items.length === 0}>
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Guardando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Guardar Proforma
-                  </>
-                )}
+            <CardFooter>
+              <Button className="w-full" onClick={guardarProforma} disabled={loading}>
+                <Save className="h-4 w-4 mr-2" />
+                {loading ? "Guardando..." : "Guardar Proforma"}
               </Button>
-              <Link href="/proformas" className="w-full">
-                <Button variant="outline" className="w-full">
-                  Cancelar
-                </Button>
-              </Link>
             </CardFooter>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Notas y Avisos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Label htmlFor="notaAviso">Nota / Aviso (Validez)</Label>
+              <Textarea
+                id="notaAviso"
+                value={notaAviso}
+                onChange={(e) => setNotaAviso(e.target.value)}
+                rows={3}
+                className="mb-4"
+              />
+              <Label htmlFor="avisoGeneral">Aviso General</Label>
+              <Textarea
+                id="avisoGeneral"
+                value={aviso}
+                onChange={(e) => setAviso(e.target.value)}
+                rows={3}
+              />
+            </CardContent>
           </Card>
         </div>
       </div>
