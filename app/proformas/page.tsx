@@ -104,7 +104,14 @@ export default function ProformasPage() {
     .sort((a, b) => {
       switch (ordenamiento) {
         case "fecha":
+        case "reciente":
           return new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+        case "antiguo":
+          return new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+        case "mayor":
+          return Number(b.total) - Number(a.total)
+        case "menor":
+          return Number(a.total) - Number(b.total)
         default:
           return 0
       }
