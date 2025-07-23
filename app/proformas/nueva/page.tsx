@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -53,6 +53,20 @@ interface ItemProforma {
 }
 
 export default function NuevaProformaPage() {
+  // Ref para detectar nuevo cliente y vehículo creados (debe estar dentro del componente)
+  const nuevoClienteIdRef = useRef<string | null>(null)
+  const nuevoVehiculoIdRef = useRef<string | null>(null)
+  // Estados principales (restaurados)
+  const [clienteId, setClienteId] = useState("");
+  const [vehiculoId, setVehiculoId] = useState("");
+  const [km, setKm] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
+  const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
+  const [items, setItems] = useState<ItemProforma[]>([]);
+  const [notaAviso, setNotaAviso] = useState("Esta proforma tiene validez de 15 días.");
+  const [aviso, setAviso] = useState("Los precios incluyen IVA. Garantía de 30 días en repuestos.");
   const router = useRouter()
 
   // Estados básicos
@@ -80,16 +94,25 @@ export default function NuevaProformaPage() {
     };
     asignarNumero();
   }, []);
-  const [clienteId, setClienteId] = useState("")
-  const [vehiculoId, setVehiculoId] = useState("")
-  const [km, setKm] = useState("")
-  const [descripcion, setDescripcion] = useState("")
-  const [clientes, setClientes] = useState<Cliente[]>([])
-  const [vehiculos, setVehiculos] = useState<Vehiculo[]>([])
-  const [repuestos, setRepuestos] = useState<Repuesto[]>([])
-  const [items, setItems] = useState<ItemProforma[]>([])
-  const [notaAviso, setNotaAviso] = useState("Esta proforma tiene validez de 15 días.")
-  const [aviso, setAviso] = useState("Los precios incluyen IVA. Garantía de 30 días en repuestos.")
+  // useEffect para sincronizar selección y filtrado tras crear cliente/vehículo
+  useEffect(() => {
+    if (nuevoClienteIdRef.current && nuevoVehiculoIdRef.current) {
+      const valueCliente = nuevoClienteIdRef.current
+      const valueVehiculo = nuevoVehiculoIdRef.current
+      const cliente = clientes.find((c) => c.id.toString() === valueCliente) || null
+      setClienteId(valueCliente)
+      setClienteSeleccionado(cliente)
+      const vehiculosCliente = vehiculos.filter((v) => v.cliente_id?.toString() === valueCliente)
+      setVehiculosFiltrados(vehiculosCliente)
+      setVehiculoId(valueVehiculo)
+      const vehiculo = vehiculosCliente.find((v) => v.id.toString() === valueVehiculo) || null
+      setVehiculoSeleccionado(vehiculo)
+      // Limpiar los refs para evitar repeticiones
+      nuevoClienteIdRef.current = null
+      nuevoVehiculoIdRef.current = null
+    }
+  }, [clientes, vehiculos])
+  // Sincronizar clienteSeleccionado cuando clientes o clienteId cambian
 
   // Estados para búsqueda
   const [busquedaRepuesto, setBusquedaRepuesto] = useState("")
@@ -245,16 +268,16 @@ export default function NuevaProformaPage() {
 
   // Validar formulario
   const validarFormulario = () => {
-    const errores = {}
+    const errores: Record<string, string> = {};
 
-    if (!numeroProforma.trim()) errores.numeroProforma = "Requerido"
-    if (!clienteId) errores.clienteId = "Requerido"
-    if (!vehiculoId) errores.vehiculoId = "Requerido"
-    if (!descripcion.trim()) errores.descripcion = "Requerido"
-    if (items.length === 0) errores.items = "Agrega al menos un item"
+    if (!numeroProforma.trim()) errores["numeroProforma"] = "Requerido";
+    if (!clienteId) errores["clienteId"] = "Requerido";
+    if (!vehiculoId) errores["vehiculoId"] = "Requerido";
+    if (!descripcion.trim()) errores["descripcion"] = "Requerido";
+    if (items.length === 0) errores["items"] = "Agrega al menos un item";
 
-    setErrors(errores)
-    return Object.keys(errores).length === 0
+    setErrors(errores);
+    return Object.keys(errores).length === 0;
   }
 
   // Guardar proforma
@@ -393,14 +416,16 @@ export default function NuevaProformaPage() {
                   {errors.clienteId && <p className="text-sm text-red-500">{errors.clienteId}</p>}
 
                   {clienteSeleccionado && (
-                    <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
-                      <p>
-                        <strong>RUC:</strong> {clienteSeleccionado.ruc}
-                      </p>
-                      <p>
-                        <strong>Teléfono:</strong> {clienteSeleccionado.telefono}
-                      </p>
-                    </div>
+                    clienteSeleccionado.nombre && clienteSeleccionado.ruc ? (
+                      <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
+                        <p>
+                          <strong>RUC:</strong> {clienteSeleccionado.ruc}
+                        </p>
+                        <p>
+                          <strong>Teléfono:</strong> {clienteSeleccionado.telefono}
+                        </p>
+                      </div>
+                    ) : null
                   )}
                 </div>
 
@@ -513,37 +538,64 @@ export default function NuevaProformaPage() {
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setShowNuevoClienteModal(false)}>Cancelar</Button>
               <Button onClick={async () => {
-                setLoadingNuevoCliente(true)
-                setErrorNuevoCliente('')
-                // Validar
+                setLoadingNuevoCliente(true);
+                setErrorNuevoCliente("");
+                // Validación simple
                 if (!nuevoCliente.nombre.trim() || !nuevoCliente.ruc.trim() || !nuevoVehiculo.marca.trim() || !nuevoVehiculo.modelo.trim() || !nuevoVehiculo.anio.trim() || !nuevoVehiculo.placa.trim()) {
-                  setErrorNuevoCliente('Completa todos los campos obligatorios')
-                  setLoadingNuevoCliente(false)
-                  return
+                  setErrorNuevoCliente("Completa todos los campos obligatorios");
+                  setLoadingNuevoCliente(false);
+                  return;
                 }
                 try {
                   // Crear cliente
-                  const clienteCreado = await apiClientes.create(nuevoCliente)
-                  if (!clienteCreado || !clienteCreado.id) throw new Error('No se pudo crear el cliente')
+                  const clienteCreado = await apiClientes.create(nuevoCliente);
+                  if (!clienteCreado || !clienteCreado.id) throw new Error("No se pudo crear el cliente");
                   // Crear vehículo
-                  const vehiculoCreado = await apiVehiculos.create({ ...nuevoVehiculo, cliente_id: clienteCreado.id })
-                  if (!vehiculoCreado || !vehiculoCreado.id) throw new Error('No se pudo crear el vehículo')
-                  // Actualizar listas y seleccionar
-                  setClientes(prev => [...prev, clienteCreado])
-                  setVehiculos(prev => [...prev, vehiculoCreado])
-                  setClienteId(clienteCreado.id.toString())
-                  setVehiculoId(vehiculoCreado.id.toString())
-                  setShowNuevoClienteModal(false)
-                  setNuevoCliente({ nombre: '', ruc: '', direccion: '', telefono: '', email: '' })
-                  setNuevoVehiculo({ marca: '', modelo: '', anio: '', placa: '', color: '' })
+                  const vehiculoCreado = await apiVehiculos.create({ ...nuevoVehiculo, cliente_id: clienteCreado.id });
+                  if (!vehiculoCreado || !vehiculoCreado.id) throw new Error("No se pudo crear el vehículo");
+
+                  // Recargar listas completas desde la API para asegurar datos correctos
+                  const clientesActualizados = await apiClientes.list();
+                  const vehiculosActualizados = await apiVehiculos.list();
+
+                  // Actualizar clientes (sin duplicados)
+                  // Filtrar solo clientes con datos completos (nombre y ruc)
+                  const clientesFinales = [...clientesActualizados, clienteCreado]
+                    .filter((c: Cliente, idx: number, arr: Cliente[]) => arr.findIndex((x: Cliente) => x.id === c.id) === idx)
+                    .filter((c: Cliente) => c.nombre && c.ruc);
+                  setClientes(clientesFinales);
+
+                  // Actualizar vehículos (sin duplicados)
+                  // Unir y filtrar por id para asegurar unicidad absoluta
+                  const vehiculosUnicos: Vehiculo[] = [...vehiculosActualizados, vehiculoCreado]
+                    .filter((v, idx, arr) => arr.findIndex(x => x.id === v.id) === idx);
+                  setVehiculos(vehiculosUnicos);
+
+                  // Seleccionar el cliente y vehículo recién creados
+                  setClienteId(clienteCreado.id.toString());
+                  setClienteSeleccionado(clienteCreado);
+
+                  // Filtrar vehículos del cliente y asegurar solo uno por id
+                  // Filtrar solo vehículos con datos completos (marca, modelo, placa)
+                  const vehiculosClienteUnicos = vehiculosUnicos
+                    .filter((v: Vehiculo) => v.cliente_id === clienteCreado.id)
+                    .filter((v: Vehiculo) => v.marca && v.modelo && v.placa);
+                  setVehiculosFiltrados(vehiculosClienteUnicos);
+
+                  setVehiculoId(vehiculoCreado.id.toString());
+                  setVehiculoSeleccionado(vehiculoCreado);
+
+                  // Cerrar modal y limpiar
+                  setShowNuevoClienteModal(false);
+                  setNuevoCliente({ nombre: '', ruc: '', direccion: '', telefono: '', email: '' });
+                  setNuevoVehiculo({ marca: '', modelo: '', anio: '', placa: '', color: '' });
                 } catch (err: any) {
-                  console.error('Error al crear cliente o vehículo:', err)
-                  setErrorNuevoCliente(err?.message || (typeof err === 'string' ? err : 'Error al crear cliente o vehículo'))
+                  setErrorNuevoCliente(err?.message || (typeof err === "string" ? err : "Error al crear cliente o vehículo"));
                 } finally {
-                  setLoadingNuevoCliente(false)
+                  setLoadingNuevoCliente(false);
                 }
               }} disabled={loadingNuevoCliente}>
-                {loadingNuevoCliente ? 'Guardando...' : 'Guardar'}
+                {loadingNuevoCliente ? "Guardando..." : "Guardar"}
               </Button>
             </div>
           </div>
