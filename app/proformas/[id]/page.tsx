@@ -485,15 +485,19 @@ export default function ProformaDetailPage() {
                     </TableRow>
                   ) : (
                     items.map((item: any, index: number) => {
-                      const repuesto = repuestos.find(r => r.id === item.repuesto_id)
+                      // Siempre mostrar lo guardado en proforma_items, y solo usar datos de repuesto si el campo está vacío
+                      const repuesto = item.repuesto_id ? repuestos.find(r => r.id === item.repuesto_id) : null;
+                      const codigo = item.codigo || repuesto?.codigo || "-";
+                      const descripcion = item.descripcion || repuesto?.descripcion || "-";
+                      const precioUnit = item.precio_unitario !== undefined ? item.precio_unitario : (item.precioUnitario !== undefined ? item.precioUnitario : 0);
                       return (
                         <TableRow key={index}>
                           <TableCell className="text-center font-mono text-xs">{index + 1}</TableCell>
-                          <TableCell className="font-mono text-sm">{repuesto?.codigo || item.repuesto_id}</TableCell>
-                          <TableCell>{repuesto?.descripcion || "-"}</TableCell>
+                          <TableCell className="font-mono text-sm">{codigo}</TableCell>
+                          <TableCell>{descripcion}</TableCell>
                           <TableCell className="text-right">{item.cantidad}</TableCell>
-                          <TableCell className="text-right">${Number(item.precio_unitario).toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-medium">${Number(item.cantidad * item.precio_unitario).toFixed(2)}</TableCell>
+                          <TableCell className="text-right">${Number(precioUnit).toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-medium">${Number(item.cantidad * precioUnit).toFixed(2)}</TableCell>
                         </TableRow>
                       )
                     })

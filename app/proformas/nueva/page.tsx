@@ -43,7 +43,7 @@ interface Repuesto {
 }
 interface ItemProforma {
   id: number;
-  repuestoId: number;
+  repuestoId: number | null;
   codigo: string;
   descripcion: string;
   cantidad: number;
@@ -135,6 +135,11 @@ export default function NuevaProformaPage() {
   const [busquedaRepuesto, setBusquedaRepuesto] = useState("")
   const [repuestoSeleccionado, setRepuestoSeleccionado] = useState<Repuesto | null>(null)
   const [cantidad, setCantidad] = useState(1)
+  // Estados exclusivos para item manual
+  const [codigoManual, setCodigoManual] = useState("");
+  const [precioManual, setPrecioManual] = useState(0)
+  const [descripcionManual, setDescripcionManual] = useState("")
+  const [cantidadManual, setCantidadManual] = useState(1);
   const [mostrarLista, setMostrarLista] = useState(false)
 
   const [repuestosFiltrados, setRepuestosFiltrados] = useState<Repuesto[]>([])
@@ -166,6 +171,7 @@ export default function NuevaProformaPage() {
 
   // Filtrar repuestos
   useEffect(() => {
+    // Solo buscar si el input de búsqueda de repuesto está activo (no el de item manual)
     if (busquedaRepuesto.trim() === "") {
       setRepuestosFiltrados([])
       setMostrarLista(false)
@@ -209,47 +215,49 @@ export default function NuevaProformaPage() {
     setMostrarLista(false)
   }
 
+  // Permitir agregar item manual (sin repuesto)
   const agregarItem = () => {
-    if (!repuestoSeleccionado) {
-      setMensaje("❌ Selecciona un repuesto")
-      return
-    }
-    if (cantidad <= 0) {
-      setMensaje("❌ La cantidad debe ser mayor a 0")
-      return
-    }
-    if (cantidad > repuestoSeleccionado.stock) {
-      setMensaje(`❌ Stock insuficiente. Disponible: ${repuestoSeleccionado.stock}`)
-      return
-    }
-    const itemExistente = items.find((item) => item.repuestoId === repuestoSeleccionado.id)
-    if (itemExistente) {
-      const nuevaCantidad = itemExistente.cantidad + cantidad
-      if (nuevaCantidad > repuestoSeleccionado.stock) {
-        setMensaje(`❌ Stock insuficiente. Ya tienes ${itemExistente.cantidad}`)
+    // Solo agregar si hay repuesto seleccionado (flujo repuesto)
+    if (repuestoSeleccionado) {
+      if (cantidad <= 0) {
+        setMensaje("❌ La cantidad debe ser mayor a 0")
         return
       }
-      setItems(
-        items.map((item) =>
-          item.repuestoId === repuestoSeleccionado.id ? { ...item, cantidad: nuevaCantidad } : item,
-        ),
-      )
-    } else {
-      const nuevoItem: ItemProforma = {
-        id: Date.now(),
-        repuestoId: repuestoSeleccionado.id,
-        codigo: repuestoSeleccionado.codigo,
-        descripcion: repuestoSeleccionado.descripcion,
-        cantidad: cantidad,
-        precio: repuestoSeleccionado.precio,
-        categoria: repuestoSeleccionado.categoria,
-        stockDisponible: repuestoSeleccionado.stock,
+      if (cantidad > repuestoSeleccionado.stock) {
+        setMensaje(`❌ Stock insuficiente. Disponible: ${repuestoSeleccionado.stock}`)
+        return
       }
-      setItems([...items, nuevoItem])
+      const itemExistente = items.find((item) => item.repuestoId === repuestoSeleccionado.id)
+      if (itemExistente) {
+        const nuevaCantidad = itemExistente.cantidad + cantidad
+        if (nuevaCantidad > repuestoSeleccionado.stock) {
+          setMensaje(`❌ Stock insuficiente. Ya tienes ${itemExistente.cantidad}`)
+          return
+        }
+        setItems(
+          items.map((item) =>
+            item.repuestoId === repuestoSeleccionado.id ? { ...item, cantidad: nuevaCantidad } : item,
+          ),
+        )
+      } else {
+        const nuevoItem: ItemProforma = {
+          id: Date.now(),
+          repuestoId: repuestoSeleccionado.id,
+          codigo: repuestoSeleccionado.codigo,
+          descripcion: repuestoSeleccionado.descripcion,
+          cantidad: cantidad,
+          precio: repuestoSeleccionado.precio,
+          categoria: repuestoSeleccionado.categoria,
+          stockDisponible: repuestoSeleccionado.stock,
+        }
+        setItems([...items, nuevoItem])
+      }
+      limpiarSeleccion()
+      setMensaje(`✅ ${repuestoSeleccionado.descripcion} agregado`)
+      setTimeout(() => setMensaje(""), 3000)
+      return
     }
-    limpiarSeleccion()
-    setMensaje(`✅ ${repuestoSeleccionado.descripcion} agregado`)
-    setTimeout(() => setMensaje(""), 3000)
+    // Si no hay repuesto seleccionado, no hacer nada aquí (el flujo manual es independiente)
   }
 
   const eliminarItem = (itemId: number) => {
@@ -312,11 +320,13 @@ export default function NuevaProformaPage() {
         usuario_creacion: "sistema"
       }
       const res = await apiProformas.create(proformaData)
-      // Guardar items
+      // Guardar items (enviando código y descripción editables, y permitiendo repuestoId nulo)
       for (const item of items) {
         await apiProformaItems.create({
           proforma_id: res.id,
-          repuesto_id: item.repuestoId,
+          repuesto_id: item.repuestoId ?? null,
+          codigo: item.codigo ?? null,
+          descripcion: item.descripcion ?? '',
           cantidad: item.cantidad,
           precio_unitario: item.precio,
         })
@@ -610,19 +620,20 @@ export default function NuevaProformaPage() {
           {/* Agregar Repuestos */}
           <Card>
             <CardHeader>
-              <CardTitle>Agregar Repuestos</CardTitle>
+              <CardTitle>Agregar Repuesto por Código</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-4">
                 <div className="md:col-span-2 relative">
-                  <Label>Buscar repuesto</Label>
+                  <Label>Buscar repuesto por código o descripción</Label>
                   <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar por código o descripción..."
+                      placeholder="Buscar por código o descripción"
                       value={busquedaRepuesto}
                       onChange={(e) => setBusquedaRepuesto(e.target.value)}
                       className="pl-8"
+                      autoFocus
                     />
                     {repuestoSeleccionado && (
                       <Button
@@ -677,12 +688,11 @@ export default function NuevaProformaPage() {
                     min="1"
                     value={cantidad}
                     onChange={(e) => setCantidad(Number.parseInt(e.target.value) || 1)}
-                    disabled={!repuestoSeleccionado}
                   />
                 </div>
 
                 <div className="flex items-end">
-                  <Button onClick={agregarItem} disabled={!repuestoSeleccionado || cantidad <= 0} className="w-full">
+                  <Button onClick={agregarItem} disabled={cantidad <= 0 || !repuestoSeleccionado} className="w-full">
                     <Plus className="h-4 w-4 mr-2" />
                     Agregar
                   </Button>
@@ -710,6 +720,90 @@ export default function NuevaProformaPage() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Sección para agregar item manual */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Agregar Item Manual</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-4">
+                <div>
+                  <Label>Código *</Label>
+                  <Input
+                    placeholder="Código del item manual"
+                    value={codigoManual}
+                    onChange={e => setCodigoManual(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label>Precio *</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={precioManual}
+                    onChange={e => setPrecioManual(Number.parseFloat(e.target.value) || 0)}
+                    placeholder="Precio del item manual"
+                  />
+                </div>
+                <div>
+                  <Label>Descripción (opcional)</Label>
+                  <Input
+                    value={descripcionManual}
+                    onChange={e => setDescripcionManual(e.target.value)}
+                    placeholder="Descripción del item manual (puedes dejarlo vacío y editar en la tabla)"
+                  />
+                </div>
+                <div>
+                  <Label>Cantidad *</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={cantidadManual}
+                    onChange={e => setCantidadManual(Number.parseInt(e.target.value) || 1)}
+                  />
+                </div>
+                <div className="flex items-end col-span-4 md:col-span-1">
+                  <Button onClick={() => {
+                    if (codigoManual.trim() === "") {
+                      setMensaje("❌ Ingresa un código para el item manual");
+                      return;
+                    }
+                    if (precioManual <= 0) {
+                      setMensaje("❌ Ingresa un precio válido para el item manual");
+                      return;
+                    }
+                    if (cantidadManual <= 0) {
+                      setMensaje("❌ La cantidad debe ser mayor a 0");
+                      return;
+                    }
+                    const nuevaDescripcion = (typeof descripcionManual === 'string' && descripcionManual.trim() !== '') ? descripcionManual : '';
+                    const nuevoItem = {
+                      id: Date.now(),
+                      repuestoId: null,
+                      codigo: codigoManual.trim(),
+                      descripcion: nuevaDescripcion,
+                      cantidad: cantidadManual,
+                      precio: precioManual,
+                      categoria: "Manual",
+                      stockDisponible: 0,
+                    };
+                    setItems([...items, nuevoItem]);
+                    setCodigoManual("");
+                    setPrecioManual(0);
+                    setDescripcionManual("");
+                    setCantidadManual(1);
+                    setMensaje("✅ Item manual agregado");
+                    setTimeout(() => setMensaje(""), 3000);
+                  }} className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar Manual
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -744,34 +838,52 @@ export default function NuevaProformaPage() {
                     ) : (
                       items.map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell className="font-mono">{item.codigo}</TableCell>
+                          <TableCell className="font-mono">
+                            <Input
+                              value={item.codigo}
+                              onChange={e => {
+                                const nuevoCodigo = e.target.value;
+                                setItems(prev => prev.map(i => i.id === item.id ? { ...i, codigo: nuevoCodigo } : i));
+                              }}
+                              className="font-mono font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
+                              style={{ fontSize: '11px', lineHeight: '1' }}
+                            />
+                          </TableCell>
                           <TableCell>
-                            <div>
-                              <Input
-                                value={item.descripcion}
-                                onChange={e => {
-                                  const nuevaDescripcion = e.target.value;
-                                  setItems(prev => prev.map(i => i.id === item.id ? { ...i, descripcion: nuevaDescripcion } : i));
-                                }}
-                                className="font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
-                                style={{ fontSize: '11px', lineHeight: '1' }}
-
-                              />
-                              <Badge variant="outline" className="text-xs">
-                                {item.categoria}
-                              </Badge>
-                            </div>
+                            <Input
+                              value={item.descripcion}
+                              onChange={e => {
+                                const nuevaDescripcion = e.target.value;
+                                setItems(prev => prev.map(i => i.id === item.id ? { ...i, descripcion: nuevaDescripcion } : i));
+                              }}
+                              className="font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
+                              style={{ fontSize: '11px', lineHeight: '1' }}
+                            />
                           </TableCell>
                           <TableCell className="text-center">
                             <Input
                               type="number"
                               min="1"
                               value={item.cantidad}
-                              onChange={(e) => actualizarCantidad(item.id, Number.parseInt(e.target.value) || 0)}
+                              onChange={e => {
+                                const nuevaCantidad = Number.parseInt(e.target.value) || 0;
+                                setItems(prev => prev.map(i => i.id === item.id ? { ...i, cantidad: nuevaCantidad } : i));
+                              }}
                               className="w-20 text-center"
                             />
                           </TableCell>
-                          <TableCell className="text-right">${Number(item.precio).toFixed(2)}</TableCell>
+                          <TableCell className="text-right">
+                            <Input
+                              type="text"
+                              value={item.precio}
+                              onChange={e => {
+                                const nuevoPrecio = Number.parseFloat(e.target.value) || 0;
+                                setItems(prev => prev.map(i => i.id === item.id ? { ...i, precio: nuevoPrecio } : i));
+                              }}
+                              className="w-20 text-right font-mono font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
+                              style={{ fontSize: '11px', lineHeight: '1' }}
+                            />
+                          </TableCell>
                           <TableCell className="text-right">${(item.cantidad * item.precio).toFixed(2)}</TableCell>
                           <TableCell className="text-center">
                             <Button variant="ghost" size="icon" onClick={() => eliminarItem(item.id)}>

@@ -25,29 +25,35 @@ BEGIN
     WHERE id = OLD.proforma_id;
 END//
 
--- Trigger para registrar movimientos de stock
+
+
+DELIMITER //
+
+DROP TRIGGER IF EXISTS tr_movimiento_stock_insert;
+
 CREATE TRIGGER tr_movimiento_stock_insert
 AFTER INSERT ON proforma_items
 FOR EACH ROW
 BEGIN
     DECLARE stock_actual INT;
-    
-    SELECT stock INTO stock_actual FROM repuestos WHERE id = NEW.repuesto_id;
-    
-    INSERT INTO movimientos_stock (repuesto_id, tipo, cantidad, stock_anterior, stock_nuevo, motivo, referencia)
-    VALUES (
-        NEW.repuesto_id, 
-        'salida', 
-        NEW.cantidad, 
-        stock_actual, 
-        stock_actual - NEW.cantidad,
-        'Venta en proforma',
-        (SELECT numero FROM proformas WHERE id = NEW.proforma_id)
-    );
-    
-    UPDATE repuestos 
-    SET stock = stock - NEW.cantidad 
-    WHERE id = NEW.repuesto_id;
-END//
+    IF NEW.repuesto_id IS NOT NULL THEN
+        SELECT stock INTO stock_actual FROM repuestos WHERE id = NEW.repuesto_id;
+        INSERT INTO movimientos_stock (repuesto_id, tipo, cantidad, stock_anterior, stock_nuevo, motivo, referencia)
+        VALUES (
+            NEW.repuesto_id, 
+            'salida', 
+            NEW.cantidad, 
+            stock_actual, 
+            stock_actual - NEW.cantidad,
+            'Venta en proforma',
+            (SELECT numero FROM proformas WHERE id = NEW.proforma_id)
+        );
+        UPDATE repuestos 
+        SET stock = stock - NEW.cantidad 
+        WHERE id = NEW.repuesto_id;
+    END IF;
+END
+//
 
+DELIMITER ;
 DELIMITER ;
