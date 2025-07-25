@@ -416,7 +416,7 @@ export default function ProformaDetailPage() {
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <span className="font-medium">Kilometraje:</span>
-                    <span className="col-span-2">{vehiculo?.km} km</span>
+                    <span className="col-span-2">{vehiculo?.km || vehiculo?.kilometraje || '-'}</span>
                   </div>
                 </div>
               </CardContent>
