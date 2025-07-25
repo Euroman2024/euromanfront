@@ -561,138 +561,9 @@ export default function EditarProformaPage() {
             </CardContent>
           </Card>
 
-          {/* Agregar repuestos */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Search className="h-5 w-5" />
-                Agregar Repuestos y Servicios
-              </CardTitle>
-              <CardDescription>Busca y agrega repuestos o servicios a la proforma</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Buscador de repuestos */}
-                <div className="grid gap-4 md:grid-cols-4">
-                  <div className="md:col-span-2 space-y-2 relative">
-                    <Label htmlFor="busqueda">Buscar repuesto</Label>
-                    <div className="relative">
-                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="busqueda"
-                        placeholder="Buscar por código, descripción o categoría..."
-                        value={busquedaRepuesto}
-                        onChange={(e) => setBusquedaRepuesto(e.target.value)}
-                        className="pl-8"
-                      />
-                      {repuestoSeleccionado && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-1 top-1 h-8 w-8"
-                          onClick={limpiarSeleccion}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
 
-                    {/* Lista de repuestos filtrados */}
-                    {mostrarLista && repuestosFiltrados.length > 0 && (
-                      <div className="absolute z-10 w-full max-h-60 overflow-y-auto border rounded-md bg-white shadow-lg">
-                        {repuestosFiltrados.map((repuesto) => (
-                          <div
-                            key={repuesto.id}
-                            className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
-                            onClick={() => seleccionarRepuesto(repuesto)}
-                          >
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <p className="font-medium text-sm">{repuesto.codigo}</p>
-                                  <Badge variant="outline" className="text-xs">
-                                    {repuesto.categoria}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-gray-600">{repuesto.descripcion}</p>
-                              </div>
-                              <div className="text-right ml-2">
-                                <p className="font-medium text-sm">${Number(repuesto.precio).toFixed(2)}</p>
-                                <Badge
-                                  variant={
-                                    repuesto.stock > 10 ? "default" : repuesto.stock > 0 ? "secondary" : "destructive"
-                                  }
-                                  className="text-xs"
-                                >
-                                  Stock: {repuesto.stock}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
 
-                    {mostrarLista && repuestosFiltrados.length === 0 && busquedaRepuesto.length > 0 && (
-                      <div className="absolute z-10 w-full border rounded-md bg-white shadow-lg">
-                        <div className="p-4 text-center text-gray-500">No se encontraron repuestos</div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="cantidad">Cantidad</Label>
-                    <Input
-                      id="cantidad"
-                      type="number"
-                      min="1"
-                      max={repuestoSeleccionado?.stock || 999}
-                      value={cantidad}
-                      onChange={(e) => setCantidad(Number.parseInt(e.target.value) || 1)}
-                      disabled={!repuestoSeleccionado}
-                    />
-                    {repuestoSeleccionado && cantidad > repuestoSeleccionado.stock && (
-                      <p className="text-sm text-red-500">Cantidad excede el stock disponible</p>
-                    )}
-                  </div>
-
-                  <div className="flex items-end">
-                    <Button
-                      onClick={agregarItem}
-                      disabled={!repuestoSeleccionado || cantidad <= 0 || cantidad > (repuestoSeleccionado?.stock || 0)}
-                      className="w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Agregar
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Información del repuesto seleccionado */}
-                {repuestoSeleccionado && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium">{repuestoSeleccionado.codigo}</p>
-                          <Badge variant="outline">{repuestoSeleccionado.categoria}</Badge>
-                        </div>
-                        <p className="text-sm text-gray-600">{repuestoSeleccionado.descripcion}</p>
-                      </div>
-                      <div className="text-right ml-4">
-                        <p className="font-medium">${Number(repuestoSeleccionado.precio).toFixed(2)}</p>
-                        <p className="text-sm font-medium text-blue-600">
-                          Total: ${(Number(repuestoSeleccionado.precio) * cantidad).toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Lista de items */}
+          {/* Edición directa de items en la tabla */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -727,20 +598,79 @@ export default function EditarProformaPage() {
                       </TableRow>
                     ) : (
                       items.map((item: any, index: number) => {
-                        const repuesto = repuestos.find((r) => r.id === (item.repuestoId ?? item.repuesto_id))
                         return (
-                          <TableRow key={index}>
+                          <TableRow key={item.id}>
                             <TableCell className="text-center font-mono text-xs">{index + 1}</TableCell>
                             <TableCell className="font-mono text-sm">
-                              {repuesto?.codigo || item.codigo || item.repuestoId || item.repuesto_id}
+                              <Input
+                                value={item.codigo}
+                                onChange={e => {
+                                  const nuevoCodigo = e.target.value;
+                                  // Buscar si el código existe en repuestos
+                                  const rep = repuestos.find(r => r.codigo.toLowerCase() === nuevoCodigo.trim().toLowerCase());
+                                  if (rep) {
+                                    setItems(prev => prev.map(i => i.id === item.id ? {
+                                      ...i,
+                                      codigo: rep.codigo,
+                                      descripcion: rep.descripcion,
+                                      precioUnitario: rep.precio,
+                                      categoria: rep.categoria,
+                                      repuestoId: rep.id,
+                                      stock: rep.stock,
+                                    } : i));
+                                  } else {
+                                    setItems(prev => prev.map(i => i.id === item.id ? {
+                                      ...i,
+                                      codigo: nuevoCodigo,
+                                      repuestoId: null,
+                                      categoria: 'Manual',
+                                      stock: 0,
+                                    } : i));
+                                  }
+                                }}
+                                className="font-mono font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
+                                style={{ fontSize: '11px', lineHeight: '1' }}
+                              />
                             </TableCell>
-                            <TableCell>{repuesto?.descripcion || item.descripcion || "-"}</TableCell>
-                            <TableCell className="text-right">{item.cantidad}</TableCell>
+                            <TableCell>
+                              <Input
+                                value={item.descripcion}
+                                onChange={e => {
+                                  const nuevaDescripcion = e.target.value;
+                                  setItems(prev => prev.map(i => i.id === item.id ? { ...i, descripcion: nuevaDescripcion } : i));
+                                }}
+                                className="font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
+                                style={{ fontSize: '11px', lineHeight: '1' }}
+                              />
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Input
+                                type="number"
+                                min="1"
+                                value={item.cantidad}
+                                onChange={e => {
+                                  const nuevaCantidad = Number.parseInt(e.target.value) || 0;
+                                  setItems(prev => prev.map(i => i.id === item.id ? { ...i, cantidad: nuevaCantidad } : i));
+                                }}
+                                className="w-20 text-center"
+                              />
+                            </TableCell>
                             <TableCell className="text-right">
-                              ${Number(item.precioUnitario ?? item.precio_unitario ?? 0).toFixed(2)}
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={item.precioUnitario}
+                                onChange={e => {
+                                  const nuevoPrecio = Number.parseFloat(e.target.value) || 0;
+                                  setItems(prev => prev.map(i => i.id === item.id ? { ...i, precioUnitario: nuevoPrecio } : i));
+                                }}
+                                className="w-20 text-right font-mono font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
+                                style={{ fontSize: '11px', lineHeight: '1' }}
+                              />
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                              ${Number((item.cantidad ?? 0) * (item.precioUnitario ?? item.precio_unitario ?? 0)).toFixed(2)}
+                              ${Number(item.cantidad * item.precioUnitario).toFixed(2)}
                             </TableCell>
                             <TableCell className="text-center">
                               <Button
@@ -758,6 +688,30 @@ export default function EditarProformaPage() {
                     )}
                   </TableBody>
                 </Table>
+              </div>
+              <div className="flex justify-end mt-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setItems(prev => ([
+                      ...prev,
+                      {
+                        id: Date.now(),
+                        repuestoId: null,
+                        codigo: '',
+                        descripcion: '',
+                        cantidad: 1,
+                        precioUnitario: 0,
+                        categoria: 'Manual',
+                        stock: 0,
+                      }
+                    ]));
+                  }}
+                  title="Agregar fila"
+                >
+                  <Plus className="h-4 w-4" /> Agregar fila
+                </Button>
               </div>
             </CardContent>
           </Card>
