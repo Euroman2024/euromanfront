@@ -70,6 +70,7 @@ export default function RepuestosPage() {
   const [loginUser, setLoginUser] = useState("");
   const [loginPass, setLoginPass] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [backendError, setBackendError] = useState<string | null>(null);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,73 +82,67 @@ export default function RepuestosPage() {
     }
   } 
   const [repuestos, setRepuestos] = useState<Repuesto[]>([])
+  const [total, setTotal] = useState(0)
   const [busqueda, setBusqueda] = useState("")
   const [filtroCategoria, setFiltroCategoria] = useState("todas")
   const [filtroStock, setFiltroStock] = useState("todos")
   const [ordenamiento, setOrdenamiento] = useState("codigo")
   const [loading, setLoading] = useState(true)
+  const [pagina, setPagina] = useState(1)
+  const [limite, setLimite] = useState(20)
 
   // Obtener repuestos desde el backend
   useEffect(() => {
     const fetchRepuestos = async () => {
       setLoading(true)
+      setBackendError(null)
       const params = new URLSearchParams()
       if (busqueda) params.append("busqueda", busqueda)
       if (filtroCategoria && filtroCategoria !== "todas") params.append("categoria", filtroCategoria)
       if (filtroStock && filtroStock !== "todos") params.append("stock", filtroStock)
       if (ordenamiento) params.append("orden", ordenamiento)
+      params.append("limit", String(limite))
+      params.append("offset", String((pagina - 1) * limite))
       const url = `${BACKEND_URL}?${params.toString()}`
       try {
         const res = await fetch(url)
         const data = await res.json()
-        setRepuestos(Array.isArray(data) ? data : [])
+        if ((data && data.code === 403) || data.error) {
+          setBackendError(data.error || 'Error desconocido del backend');
+          setRepuestos([])
+          setTotal(0)
+        } else if (data && Array.isArray(data.data)) {
+          setRepuestos(
+            data.data.map((r: any) => ({
+              ...r,
+              id: Number(r.id),
+              stock: Number(r.stock),
+              stockMinimo: Number(r.stock_minimo ?? r.stockMinimo),
+              precio: Number(r.precio),
+              precioIva: Number(r.precio_iva ?? r.precioIva),
+            }))
+          );
+          setTotal(Number(data.total || 0));
+        } else {
+          setRepuestos([])
+          setTotal(0)
+        }
       } catch (e) {
+        setBackendError('Error de red o formato de respuesta inválido');
         setRepuestos([])
+        setTotal(0)
       } finally {
         setLoading(false)
       }
     }
     fetchRepuestos()
-  }, [busqueda, filtroCategoria, filtroStock, ordenamiento])
+  }, [busqueda, filtroCategoria, filtroStock, ordenamiento, pagina, limite])
 
-  // Obtener categorías únicas
+  // Obtener categorías únicas (de los repuestos actuales)
   const categorias = Array.from(new Set(repuestos.map((r) => r.categoria)))
 
-  // Filtrar y ordenar repuestos
+  // Ya no filtramos ni ordenamos en frontend, lo hace el backend
   const repuestosFiltrados = repuestos
-    .filter((repuesto) => {
-      const coincideBusqueda =
-        (repuesto.codigo?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
-        (repuesto.descripcion?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
-        (repuesto.proveedor?.toLowerCase() || "").includes(busqueda.toLowerCase())
-
-      const coincideCategoria = filtroCategoria === "todas" || repuesto.categoria === filtroCategoria
-
-      let coincideStock = true
-      if (filtroStock === "bajo") {
-        coincideStock = repuesto.stock <= repuesto.stockMinimo && repuesto.stock > 0
-      } else if (filtroStock === "agotado") {
-        coincideStock = repuesto.stock === 0
-      } else if (filtroStock === "disponible") {
-        coincideStock = repuesto.stock > repuesto.stockMinimo
-      }
-
-      return coincideBusqueda && coincideCategoria && coincideStock
-    })
-    .sort((a, b) => {
-      switch (ordenamiento) {
-        case "codigo":
-          return a.codigo.localeCompare(b.codigo)
-        case "descripcion":
-          return a.descripcion.localeCompare(b.descripcion)
-        case "precio":
-          return Number(b.precio) - Number(a.precio)
-        case "stock":
-          return a.stock - b.stock
-        default:
-          return 0
-      }
-    })
 
   const eliminarRepuesto = async (id: number) => {
     try {
@@ -286,6 +281,12 @@ export default function RepuestosPage() {
         </Select>
       </div>
 
+      {/* Error del backend */}
+      {backendError && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-800">
+          <strong>Error:</strong> {backendError}
+        </div>
+      )}
       {/* Tabla de repuestos */}
       <div className="rounded-md border">
         <Table>
@@ -413,13 +414,24 @@ export default function RepuestosPage() {
       {/* Paginación */}
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm text-muted-foreground">
-          Mostrando <strong>{repuestosFiltrados.length}</strong> de <strong>{repuestos.length}</strong> repuestos
+          Mostrando <strong>{(pagina - 1) * limite + 1}</strong> - <strong>{(pagina - 1) * limite + repuestosFiltrados.length}</strong> de <strong>{total}</strong> repuestos
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" disabled>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPagina((p) => Math.max(1, p - 1))}
+            disabled={pagina === 1 || loading}
+          >
             Anterior
           </Button>
-          <Button variant="outline" size="sm" disabled>
+          <span className="text-xs">Página {pagina} de {Math.max(1, Math.ceil(total / limite))}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPagina((p) => p + 1)}
+            disabled={pagina >= Math.ceil(total / limite) || loading}
+          >
             Siguiente
           </Button>
         </div>
