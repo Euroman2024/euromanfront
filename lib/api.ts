@@ -1,5 +1,5 @@
 // Utilidades para consumir los endpoints del backend PHP
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "http://localhost/proformas/euroman";
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "http://192.168.100.112/proformas/euroman/";
 
 // Helper para requests genéricos
 async function apiRequest(path: string, options: { method?: string; body?: any; } = {}) {
