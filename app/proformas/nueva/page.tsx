@@ -161,15 +161,29 @@ export default function NuevaProformaPage() {
   // Cargar clientes, vehículos y repuestos reales
   useEffect(() => {
     const fetchData = async () => {
-      const clientes = await apiClientes.list()
-      setClientes(clientes)
-      const vehiculos = await apiVehiculos.list()
-      setVehiculos(vehiculos)
-      const repuestos = await apiRepuestos.list()
-      setRepuestos(repuestos)
-    }
-    fetchData()
-  }, [])
+      try {
+        const clientes = await apiClientes.list();
+        setClientes(clientes);
+        const vehiculos = await apiVehiculos.list();
+        setVehiculos(vehiculos);
+        let repuestos = [];
+        try {
+          const res = await apiRepuestos.list();
+          repuestos = Array.isArray(res) ? res : [];
+        } catch (error) {
+          setMensaje('❌ Error al cargar los repuestos.');
+          repuestos = [];
+        }
+        setRepuestos(repuestos);
+      } catch (error) {
+        setMensaje('❌ Error general al cargar datos.');
+        setClientes([]);
+        setVehiculos([]);
+        setRepuestos([]);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Filtrar repuestos
   useEffect(() => {
@@ -677,13 +691,26 @@ export default function NuevaProformaPage() {
                               value={item.codigo}
                               onChange={e => {
                                 const nuevoCodigo = e.target.value;
-                                // Buscar si el código existe en repuestos
-                                const rep = repuestos.find(r => r.codigo.toLowerCase() === nuevoCodigo.trim().toLowerCase());
-                                if (rep) {
-                                  // Si existe, autocompletar los datos del item
+                                // Si repuestos no es array o está vacío, solo dejar manual
+                                if (!Array.isArray(repuestos) || repuestos.length === 0) {
                                   setItems(prev => prev.map(i => i.id === item.id ? {
                                     ...i,
-                                    codigo: rep.codigo,
+                                    codigo: nuevoCodigo,
+                                    repuestoId: null,
+                                    categoria: 'Manual',
+                                    stockDisponible: 0,
+                                  } : i));
+                                  return;
+                                }
+                                // Buscar repuesto solo si hay repuestos válidos
+                                let rep = null;
+                                if (Array.isArray(repuestos)) {
+                                  rep = repuestos.find(r => r.codigo && r.codigo.toLowerCase() === nuevoCodigo.trim().toLowerCase());
+                                }
+                                if (rep) {
+                                  setItems(prev => prev.map(i => i.id === item.id ? {
+                                    ...i,
+                                    codigo: nuevoCodigo,
                                     descripcion: rep.descripcion,
                                     precio: rep.precio,
                                     categoria: rep.categoria,
@@ -691,7 +718,6 @@ export default function NuevaProformaPage() {
                                     stockDisponible: rep.stock,
                                   } : i));
                                 } else {
-                                  // Si no existe, dejar como manual editable
                                   setItems(prev => prev.map(i => i.id === item.id ? {
                                     ...i,
                                     codigo: nuevoCodigo,
