@@ -140,32 +140,45 @@ export default function Home() {
                 </Link>
               </CardFooter>
             </Card>
-            {/* Vehículos */}
-            <Card className="bg-yellow-50 flex flex-col justify-between min-h-[270px] transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-translate-y-2 hover:bg-yellow-200">
-              <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
-                <CalendarDays className="h-12 w-12 text-yellow-500 mb-2 transition-colors duration-300 group-hover:text-yellow-900" />
-                <CardTitle className="text-xl text-center">Vehículos</CardTitle>
-                <CardDescription className="text-center">Gestiona la información de vehículos</CardDescription>
-              </CardHeader>
-              <CardFooter className="flex justify-center pb-4">
-                <Link href="/vehiculos" className="w-full">
-                  <Button variant="default" className="w-full">Ir a Vehículos</Button>
-                </Link>
-              </CardFooter>
-            </Card>
-            {/* Entidades */}
-            <Card className="bg-purple-50 flex flex-col justify-between min-h-[270px] transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-translate-y-2 hover:bg-purple-200">
-              <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
-                <FileText className="h-12 w-12 text-purple-600 mb-2 transition-colors duration-300 group-hover:text-purple-900" />
-                <CardTitle className="text-xl text-center">Entidades</CardTitle>
-                <CardDescription className="text-center">Gestiona la información de tu empresa y sucursales</CardDescription>
-              </CardHeader>
-              <CardFooter className="flex justify-center pb-4">
-                <Link href="/entidades" className="w-full">
-                  <Button variant="default" className="w-full">Ir a Entidades</Button>
-                </Link>
-              </CardFooter>
-            </Card>
+          {/* Vehículos */}
+          <Card className="bg-yellow-50 flex flex-col justify-between min-h-[270px] transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-translate-y-2 hover:bg-yellow-200">
+            <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
+              <CalendarDays className="h-12 w-12 text-yellow-500 mb-2 transition-colors duration-300 group-hover:text-yellow-900" />
+              <CardTitle className="text-xl text-center">Vehículos</CardTitle>
+              <CardDescription className="text-center">Gestiona la información de vehículos</CardDescription>
+            </CardHeader>
+            <CardFooter className="flex justify-center pb-4">
+              <Link href="/vehiculos" className="w-full">
+                <Button variant="default" className="w-full">Ir a Vehículos</Button>
+              </Link>
+            </CardFooter>
+          </Card>
+          {/* Reportes */}
+          <Card className="bg-indigo-50 flex flex-col justify-between min-h-[270px] transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-translate-y-2 hover:bg-indigo-200">
+            <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
+              <FileText className="h-12 w-12 text-indigo-600 mb-2 transition-colors duration-300 group-hover:text-indigo-900" />
+              <CardTitle className="text-xl text-center">Reportes</CardTitle>
+              <CardDescription className="text-center">Visualiza reportes de proformas y más</CardDescription>
+            </CardHeader>
+            <CardFooter className="flex justify-center pb-4">
+              <Link href="/reportes" className="w-full">
+                <Button variant="default" className="w-full">Ir a Reportes</Button>
+              </Link>
+            </CardFooter>
+          </Card>
+          {/* Entidades */}
+          <Card className="bg-purple-50 flex flex-col justify-between min-h-[270px] transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-translate-y-2 hover:bg-purple-200">
+            <CardHeader className="flex flex-col items-center justify-center gap-2 flex-1">
+              <FileText className="h-12 w-12 text-purple-600 mb-2 transition-colors duration-300 group-hover:text-purple-900" />
+              <CardTitle className="text-xl text-center">Entidades</CardTitle>
+              <CardDescription className="text-center">Gestiona la información de tu empresa y sucursales</CardDescription>
+            </CardHeader>
+            <CardFooter className="flex justify-center pb-4">
+              <Link href="/entidades" className="w-full">
+                <Button variant="default" className="w-full">Ir a Entidades</Button>
+              </Link>
+            </CardFooter>
+          </Card>
           </div>
         </div>
       </main>
