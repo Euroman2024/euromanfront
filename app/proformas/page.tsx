@@ -205,32 +205,12 @@ export default function ProformasPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Abrir menú</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href={`/proformas/${proforma.id}`}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          <span>Ver detalles</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Printer className="mr-2 h-4 w-4" />
-                        <span>Imprimir</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <FileText className="mr-2 h-4 w-4" />
-                        <span>Generar factura</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Link href={`/proformas/${proforma.id}`}>
+                    <Button variant="outline" size="sm">
+                      <Eye className="mr-2 h-4 w-4" />
+                      Ver detalles
+                    </Button>
+                  </Link>
                 </TableCell>
               </TableRow>
             ))}
