@@ -172,7 +172,13 @@ export default function ProformaPreviewPage() {
         ...proforma,
         cliente,
         vehiculo,
-        items,
+        items: items.map(item => ({
+          codigo: item.codigo || (item.repuesto?.codigo ?? ""),
+          descripcion: item.descripcion || (item.repuesto?.descripcion ?? ""),
+          cantidad: Number(item.cantidad) || 0,
+          precioUnitario: Number(item.precioUnitario) || Number(item.precio_unitario) || 0,
+          precioTotal: Number(item.precioTotal) || Number(item.precio_total) || 0
+        })),
         entidad: entidad || {
           nombre: "",
           propietario: "",
