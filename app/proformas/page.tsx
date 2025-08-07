@@ -93,13 +93,25 @@ export default function ProformasPage() {
   // Filtrar y ordenar proformas
   const proformasFiltradas = proformas
     .filter((proforma) => {
+      const clienteId = (proforma as any).cliente_id || "";
+      const vehiculoId = (proforma as any).vehiculo_id || "";
+      const clienteNombre = proforma.cliente || clientes[clienteId]?.nombre || "";
+      const vehiculoObj = vehiculos[vehiculoId] || {};
+      // Combina marca y modelo para búsqueda más robusta
+      const vehiculoMarca = vehiculoObj.marca || "";
+      const vehiculoModelo = vehiculoObj.modelo || "";
+      const vehiculoNombreCompleto = `${vehiculoMarca} ${vehiculoModelo}`.trim();
+      const placa = proforma.placa || vehiculoObj.placa || "";
+      const busquedaLower = busqueda.toLowerCase();
       const coincideBusqueda =
-        (proforma.numero?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
-        (proforma.cliente?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
-        (proforma.vehiculo?.toLowerCase() || "").includes(busqueda.toLowerCase()) ||
-        (proforma.placa || "").includes(busqueda)
-      const coincideEstado = filtroEstado === "todos" || proforma.estado === filtroEstado
-      return coincideBusqueda && coincideEstado
+        (proforma.numero?.toLowerCase() || "").includes(busquedaLower) ||
+        clienteNombre.toLowerCase().includes(busquedaLower) ||
+        vehiculoMarca.toLowerCase().includes(busquedaLower) ||
+        vehiculoModelo.toLowerCase().includes(busquedaLower) ||
+        vehiculoNombreCompleto.toLowerCase().includes(busquedaLower) ||
+        placa.toLowerCase().includes(busquedaLower);
+      const coincideEstado = filtroEstado === "todos" || proforma.estado === filtroEstado;
+      return coincideBusqueda && coincideEstado;
     })
     .sort((a, b) => {
       switch (ordenamiento) {
