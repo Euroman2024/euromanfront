@@ -129,6 +129,15 @@ export default function ProformasPage() {
       }
     })
 
+  // Agrupar proformas por mes y año
+  const proformasPorMes: { [mes: string]: typeof proformasFiltradas } = {};
+  proformasFiltradas.forEach((p) => {
+    const fecha = new Date(p.fecha);
+    const mes = fecha.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+    if (!proformasPorMes[mes]) proformasPorMes[mes] = [];
+    proformasPorMes[mes].push(p);
+  });
+
   return (
     <div className="container py-10">
       <div className="mb-4">
@@ -203,29 +212,36 @@ export default function ProformasPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {proformasFiltradas.map((proforma) => (
-              <TableRow key={proforma.id}>
-                <TableCell className="font-medium">{proforma.numero}</TableCell>
-                <TableCell>{clientes[String((proforma as any).cliente_id)]?.nombre || "-"}</TableCell>
-                <TableCell>{vehiculos[String((proforma as any).vehiculo_id)] ? `${vehiculos[String((proforma as any).vehiculo_id)]?.marca} ${vehiculos[String((proforma as any).vehiculo_id)]?.modelo}` : "-"}</TableCell>
-                <TableCell>{vehiculos[String((proforma as any).vehiculo_id)]?.placa || "-"}</TableCell>
-                <TableCell>{new Date(proforma.fecha).toLocaleDateString()}</TableCell>
-                <TableCell className="text-right">${Number(proforma.total).toFixed(2)}</TableCell>
-                <TableCell>
-                  <Badge className={getStatusColor(proforma.estado)} variant="outline">
-                    {proforma.estado.charAt(0).toUpperCase() + proforma.estado.slice(1)}
-                  </Badge>
+            {Object.entries(proformasPorMes).map(([mes, proformasMes]) => [
+              <TableRow key={mes}>
+                <TableCell colSpan={8} className="bg-muted font-bold text-lg py-2 text-primary">
+                  {mes.charAt(0).toUpperCase() + mes.slice(1)}
                 </TableCell>
-                <TableCell className="text-right">
-                  <Link href={`/proformas/${proforma.id}`}>
-                    <Button variant="outline" size="sm">
-                      <Eye className="mr-2 h-4 w-4" />
-                      Ver detalles
-                    </Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
+              </TableRow>,
+              ...proformasMes.map((proforma) => (
+                <TableRow key={proforma.id}>
+                  <TableCell className="font-medium">{proforma.numero}</TableCell>
+                  <TableCell>{clientes[String((proforma as any).cliente_id)]?.nombre || "-"}</TableCell>
+                  <TableCell>{vehiculos[String((proforma as any).vehiculo_id)] ? `${vehiculos[String((proforma as any).vehiculo_id)]?.marca} ${vehiculos[String((proforma as any).vehiculo_id)]?.modelo}` : "-"}</TableCell>
+                  <TableCell>{vehiculos[String((proforma as any).vehiculo_id)]?.placa || "-"}</TableCell>
+                  <TableCell>{new Date(proforma.fecha).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right">${Number(proforma.total).toFixed(2)}</TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(proforma.estado)} variant="outline">
+                      {proforma.estado.charAt(0).toUpperCase() + proforma.estado.slice(1)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Link href={`/proformas/${proforma.id}`}>
+                      <Button variant="outline" size="sm">
+                        <Eye className="mr-2 h-4 w-4" />
+                        Ver detalles
+                      </Button>
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))
+            ])}
           </TableBody>
         </Table>
       </div>
