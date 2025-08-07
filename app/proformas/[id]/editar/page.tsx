@@ -580,12 +580,12 @@ export default function EditarProformaPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-center">N°</TableHead>
-                      <TableHead>Código</TableHead>
-                      <TableHead>Descripción</TableHead>
-                      <TableHead className="text-center">Cantidad</TableHead>
-                      <TableHead className="text-right">P. Unitario</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="text-center border-r border-gray-300">N°</TableHead>
+                      <TableHead className="border-r border-gray-300">Código</TableHead>
+                      <TableHead className="border-r border-gray-300 min-w-[220px] w-[220px]">Descripción</TableHead>
+                      <TableHead className="text-center border-r border-gray-300">Cantidad</TableHead>
+                      <TableHead className="text-right border-r border-gray-300">P. Unitario</TableHead>
+                      <TableHead className="text-right border-r border-gray-300">Total</TableHead>
                       <TableHead className="text-center">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -600,13 +600,12 @@ export default function EditarProformaPage() {
                       items.map((item: any, index: number) => {
                         return (
                           <TableRow key={item.id}>
-                            <TableCell className="text-center font-mono text-xs">{index + 1}</TableCell>
-                            <TableCell className="font-mono text-sm">
+                            <TableCell className="text-center font-mono text-xs border-r border-gray-300">{index + 1}</TableCell>
+                            <TableCell className="font-mono border-r border-gray-300">
                               <Input
                                 value={item.codigo}
                                 onChange={e => {
                                   const nuevoCodigo = e.target.value;
-                                  // Buscar si el código existe en repuestos
                                   const rep = repuestos.find(r => r.codigo.toLowerCase() === nuevoCodigo.trim().toLowerCase());
                                   if (rep) {
                                     setItems(prev => prev.map(i => i.id === item.id ? {
@@ -628,50 +627,50 @@ export default function EditarProformaPage() {
                                     } : i));
                                   }
                                 }}
-                                className="font-mono font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
-                                style={{ fontSize: '11px', lineHeight: '1' }}
+                                className="w-full h-10 font-mono font-light px-0 py-0 border-none bg-transparent focus:outline-none focus:bg-blue-50 focus:shadow-none text-left"
+                                style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                               />
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="border-r border-gray-300 min-w-[220px] w-[220px]">
                               <Input
                                 value={item.descripcion}
                                 onChange={e => {
                                   const nuevaDescripcion = e.target.value;
                                   setItems(prev => prev.map(i => i.id === item.id ? { ...i, descripcion: nuevaDescripcion } : i));
                                 }}
-                                className="font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
-                                style={{ fontSize: '11px', lineHeight: '1' }}
+                                className="w-full h-10 font-light px-0 py-0 border-none bg-transparent focus:outline-none focus:bg-blue-50 focus:shadow-none text-left"
+                                style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                               />
                             </TableCell>
-                            <TableCell className="text-center">
+                            <TableCell className="text-center border-r border-gray-300">
                               <Input
-                                type="number"
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 min="1"
                                 value={item.cantidad}
                                 onChange={e => {
-                                  const nuevaCantidad = Number.parseInt(e.target.value) || 0;
+                                  const val = e.target.value.replace(/[^0-9]/g, "");
+                                  const nuevaCantidad = val === "" ? 0 : Number.parseInt(val);
                                   setItems(prev => prev.map(i => i.id === item.id ? { ...i, cantidad: nuevaCantidad } : i));
                                 }}
-                                className="w-20 text-center"
+                                className="w-full h-10 text-center px-0 py-0 border-none bg-transparent focus:outline-none focus:bg-blue-50 focus:shadow-none hide-number-spin"
+                                style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                               />
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right border-r border-gray-300">
                               <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
+                                type="text"
                                 value={item.precioUnitario}
                                 onChange={e => {
                                   const nuevoPrecio = Number.parseFloat(e.target.value) || 0;
                                   setItems(prev => prev.map(i => i.id === item.id ? { ...i, precioUnitario: nuevoPrecio } : i));
                                 }}
-                                className="w-20 text-right font-mono font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
-                                style={{ fontSize: '11px', lineHeight: '1' }}
+                                className="w-full h-10 text-right font-mono font-light px-0 py-0 border-none bg-transparent focus:outline-none focus:bg-blue-50 focus:shadow-none"
+                                style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                               />
                             </TableCell>
-                            <TableCell className="text-right font-medium">
-                              ${Number(item.cantidad * item.precioUnitario).toFixed(2)}
-                            </TableCell>
+                            <TableCell className="text-right border-r border-gray-300">${(item.cantidad * item.precioUnitario).toFixed(2)}</TableCell>
                             <TableCell className="text-center">
                               <Button
                                 variant="ghost"
