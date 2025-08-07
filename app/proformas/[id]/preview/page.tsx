@@ -10,7 +10,7 @@ import { apiProformas, apiClientes, apiVehiculos, apiProformaItems, apiRepuestos
 import jsPDF from "jspdf"
 import html2canvas from "html2canvas"
 import autoTable from "jspdf-autotable"
-import { PDFDownloadLink } from "@react-pdf/renderer";
+import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
 import { ProformaPDFDocument } from "@/components/ProformaPDFDocument";
 
 export default function ProformaPreviewPage() {
@@ -121,54 +121,16 @@ export default function ProformaPreviewPage() {
     setSending(true);
     setEmailResult(null);
     try {
-      if (!headerRef.current) {
-        setEmailResult("No se pudo generar el PDF (headerRef vacío)");
+      if (!pdfDataForDownload) {
+        setEmailResult("No se pudo generar el PDF");
         setSending(false);
         return;
       }
-      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-      const canvas = await html2canvas(headerRef.current, { scale: 2 });
-      const imgData = canvas.toDataURL("image/png");
-      const pageWidth = pdf.internal.pageSize.getWidth() - 80;
-      const imgProps = pdf.getImageProperties(imgData);
-      const imgWidth = pageWidth;
-      const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-      pdf.addImage(imgData, "PNG", 40, 40, imgWidth, imgHeight);
-      autoTable(pdf, {
-        startY: 40 + imgHeight + 16,
-        head: [["Código", "Descripción", "Cant.", "P. Unit.", "Total"]],
-  body: pdfData.items.map((item: any) => [
-          item.codigo,
-          item.descripcion,
-          item.cantidad,
-          `$${item.precioUnitario.toFixed(2)}`,
-          `$${item.precioTotal.toFixed(2)}`
-        ]),
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [240,240,240], textColor: 30 },
-        columnStyles: { 2: { halign: 'center' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
-        theme: 'grid',
-        margin: { left: 40, right: 40 },
-        didDrawPage: (data) => {
-          const isLastPage = data.pageNumber === pdf.getNumberOfPages();
-          const y = data.cursor ? data.cursor.y + 20 : (data.table.finalY || 0) + 20;
-          if (isLastPage) {
-            pdf.setFontSize(11)
-            pdf.text(`Subtotal: $${pdfData.subtotal.toFixed(2)}`, 400, y)
-            pdf.text(`IVA (12%): $${pdfData.iva.toFixed(2)}`, 400, y + 15)
-            pdf.setFontSize(13)
-            pdf.text(`TOTAL: $${pdfData.total.toFixed(2)}`, 400, y + 35)
-            pdf.setFontSize(10)
-            pdf.text("NOTA IMPORTANTE:", 40, y)
-            pdf.text(pdfData.notaAviso, 40, y + 15, { maxWidth: 320 })
-            pdf.text("TÉRMINOS Y CONDICIONES:", 40, y + 45)
-            pdf.text(pdfData.aviso, 40, y + 60, { maxWidth: 320 })
-          }
-        }
-      });
-      const pdfBlob = pdf.output("blob");
+      // Generar el PDF con @react-pdf/renderer
+      const pdfInstance = pdf(<ProformaPDFDocument data={pdfDataForDownload} />);
+      const pdfBlob = await pdfInstance.toBlob();
       const formData = new FormData();
-      formData.append("pdf", pdfBlob, `proforma-${pdfData.numero}.pdf`);
+      formData.append("pdf", pdfBlob, `proforma_${pdfDataForDownload.numero || "documento"}.pdf`);
       formData.append("email", emailToSend);
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/repuestos/api_enviar_proforma.php`, {
         method: "POST",
