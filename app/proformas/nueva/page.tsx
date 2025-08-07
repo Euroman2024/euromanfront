@@ -742,14 +742,18 @@ export default function NuevaProformaPage() {
                           </TableCell>
                           <TableCell className="text-center">
                             <Input
-                              type="number"
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
                               min="1"
                               value={item.cantidad}
                               onChange={e => {
-                                const nuevaCantidad = Number.parseInt(e.target.value) || 0;
+                                // Only allow integer values
+                                const val = e.target.value.replace(/[^0-9]/g, "");
+                                const nuevaCantidad = val === "" ? 0 : Number.parseInt(val);
                                 setItems(prev => prev.map(i => i.id === item.id ? { ...i, cantidad: nuevaCantidad } : i));
                               }}
-                              className="w-full h-10 text-center px-0 py-0 border-none bg-transparent focus:outline-none focus:bg-blue-50 focus:shadow-none"
+                              className="w-full h-10 text-center px-0 py-0 border-none bg-transparent focus:outline-none focus:bg-blue-50 focus:shadow-none hide-number-spin"
                               style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                             />
                           </TableCell>
