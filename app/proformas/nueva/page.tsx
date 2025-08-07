@@ -666,11 +666,11 @@ export default function NuevaProformaPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Código</TableHead>
-                      <TableHead>Descripción</TableHead>
-                      <TableHead className="text-center">Cantidad</TableHead>
-                      <TableHead className="text-right">Precio</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="border-r border-gray-300">Código</TableHead>
+                      <TableHead className="border-r border-gray-300 min-w-[220px] w-[220px]">Descripción</TableHead>
+                      <TableHead className="text-center border-r border-gray-300">Cantidad</TableHead>
+                      <TableHead className="text-right border-r border-gray-300">Precio</TableHead>
+                      <TableHead className="text-right border-r border-gray-300">Total</TableHead>
                       <TableHead className="text-center">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -686,7 +686,7 @@ export default function NuevaProformaPage() {
                     ) : (
                       items.map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell className="font-mono">
+                          <TableCell className="font-mono border-r border-gray-300">
                             <Input
                               value={item.codigo}
                               onChange={e => {
@@ -729,7 +729,7 @@ export default function NuevaProformaPage() {
                               style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="border-r border-gray-300 min-w-[220px] w-[220px]">
                             <Input
                               value={item.descripcion}
                               onChange={e => {
@@ -740,7 +740,7 @@ export default function NuevaProformaPage() {
                               style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                             />
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-center border-r border-gray-300">
                             <Input
                               type="text"
                               inputMode="numeric"
@@ -757,7 +757,7 @@ export default function NuevaProformaPage() {
                               style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                             />
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right border-r border-gray-300">
                             <Input
                               type="text"
                               value={item.precio}
@@ -769,7 +769,7 @@ export default function NuevaProformaPage() {
                               style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                             />
                           </TableCell>
-                          <TableCell className="text-right">${(item.cantidad * item.precio).toFixed(2)}</TableCell>
+                          <TableCell className="text-right border-r border-gray-300">${(item.cantidad * item.precio).toFixed(2)}</TableCell>
                           <TableCell className="text-center">
                             <Button variant="ghost" size="icon" onClick={() => eliminarItem(item.id)}>
                               <Trash2 className="h-4 w-4 text-red-500" />
