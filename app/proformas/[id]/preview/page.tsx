@@ -225,9 +225,6 @@ export default function ProformaPreviewPage() {
               </Button>
             </Link>
             <h1 className="text-lg font-semibold">Vista Previa - {pdfData.numero}</h1>
-            <Button variant="outline" size="sm" onClick={() => setShowEmailModal(true)}>
-              Enviar por correo
-            </Button>
           </div>
       {/* Modal para enviar por correo */}
       {showEmailModal && (
@@ -254,22 +251,25 @@ export default function ProformaPreviewPage() {
           </div>
         </div>
       )}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Button variant="outline" size="sm">
-              <Printer className="mr-2 h-4 w-4" />
+              <Printer className="mr-2 h-4 w-4 text-blue-500" />
               Imprimir
             </Button>
-            {/* Botón de descarga PDF con @react-pdf/renderer */}
             {pdfDataForDownload && (
-              <div className="my-4">
-                <PDFDownloadLink
-                  document={<ProformaPDFDocument data={pdfDataForDownload} />}
-                  fileName={`proforma_${pdfDataForDownload.numero || "documento"}.pdf`}
-                >
-                  {({ loading }) => loading ? "Generando PDF..." : "Descargar PDF"}
-                </PDFDownloadLink>
-              </div>
+              <PDFDownloadLink
+                document={<ProformaPDFDocument data={pdfDataForDownload} />}
+                fileName={`proforma_${pdfDataForDownload.numero || "documento"}.pdf`}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-100 transition-colors text-green-700"
+              >
+                <Download className="mr-2 h-4 w-4 text-green-500" />
+                Descargar PDF
+              </PDFDownloadLink>
             )}
+            <Button variant="outline" size="sm" onClick={() => setShowEmailModal(true)}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="mr-2 h-4 w-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+              Enviar por correo
+            </Button>
           </div>
         </div>
       </div>
