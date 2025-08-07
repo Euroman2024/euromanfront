@@ -691,7 +691,6 @@ export default function NuevaProformaPage() {
                               value={item.codigo}
                               onChange={e => {
                                 const nuevoCodigo = e.target.value;
-                                // Si repuestos no es array o está vacío, solo dejar manual
                                 if (!Array.isArray(repuestos) || repuestos.length === 0) {
                                   setItems(prev => prev.map(i => i.id === item.id ? {
                                     ...i,
@@ -702,7 +701,6 @@ export default function NuevaProformaPage() {
                                   } : i));
                                   return;
                                 }
-                                // Buscar repuesto solo si hay repuestos válidos
                                 let rep = null;
                                 if (Array.isArray(repuestos)) {
                                   rep = repuestos.find(r => r.codigo && r.codigo.toLowerCase() === nuevoCodigo.trim().toLowerCase());
@@ -727,8 +725,8 @@ export default function NuevaProformaPage() {
                                   } : i));
                                 }
                               }}
-                              className="font-mono font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
-                              style={{ fontSize: '11px', lineHeight: '1' }}
+                              className="w-full h-10 font-mono font-light px-0 py-0 border-none bg-transparent focus:outline-none focus:bg-blue-50 focus:shadow-none text-left"
+                              style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                             />
                           </TableCell>
                           <TableCell>
@@ -738,8 +736,8 @@ export default function NuevaProformaPage() {
                                 const nuevaDescripcion = e.target.value;
                                 setItems(prev => prev.map(i => i.id === item.id ? { ...i, descripcion: nuevaDescripcion } : i));
                               }}
-                              className="font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
-                              style={{ fontSize: '11px', lineHeight: '1' }}
+                              className="w-full h-10 font-light px-0 py-0 border-none bg-transparent focus:outline-none focus:bg-blue-50 focus:shadow-none text-left"
+                              style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                             />
                           </TableCell>
                           <TableCell className="text-center">
@@ -751,7 +749,8 @@ export default function NuevaProformaPage() {
                                 const nuevaCantidad = Number.parseInt(e.target.value) || 0;
                                 setItems(prev => prev.map(i => i.id === item.id ? { ...i, cantidad: nuevaCantidad } : i));
                               }}
-                              className="w-20 text-center"
+                              className="w-full h-10 text-center px-0 py-0 border-none bg-transparent focus:outline-none focus:bg-blue-50 focus:shadow-none"
+                              style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                             />
                           </TableCell>
                           <TableCell className="text-right">
@@ -762,8 +761,8 @@ export default function NuevaProformaPage() {
                                 const nuevoPrecio = Number.parseFloat(e.target.value) || 0;
                                 setItems(prev => prev.map(i => i.id === item.id ? { ...i, precio: nuevoPrecio } : i));
                               }}
-                              className="w-20 text-right font-mono font-light mb-0 py-0 px-1 h-4 leading-none border-gray-200 bg-transparent focus:ring-0 focus:border-gray-300"
-                              style={{ fontSize: '11px', lineHeight: '1' }}
+                              className="w-full h-10 text-right font-mono font-light px-0 py-0 border-none bg-transparent focus:outline-none focus:bg-blue-50 focus:shadow-none"
+                              style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                             />
                           </TableCell>
                           <TableCell className="text-right">${(item.cantidad * item.precio).toFixed(2)}</TableCell>
