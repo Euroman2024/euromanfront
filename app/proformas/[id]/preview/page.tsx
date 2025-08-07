@@ -29,6 +29,7 @@ export default function ProformaPreviewPage() {
   const [emailToSend, setEmailToSend] = useState("");
   const [sending, setSending] = useState(false);
   const [emailResult, setEmailResult] = useState<string | null>(null);
+  const [showResultModal, setShowResultModal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -124,6 +125,8 @@ export default function ProformaPreviewPage() {
       if (!pdfDataForDownload) {
         setEmailResult("No se pudo generar el PDF");
         setSending(false);
+        setShowEmailModal(false);
+        setShowResultModal(true);
         return;
       }
       // Generar el PDF con @react-pdf/renderer
@@ -146,6 +149,8 @@ export default function ProformaPreviewPage() {
       setEmailResult("Error de red o del servidor.");
     } finally {
       setSending(false);
+      setShowEmailModal(false);
+      setShowResultModal(true);
     }
   }
 
@@ -153,6 +158,7 @@ export default function ProformaPreviewPage() {
   if (error || !proforma) return <div className="p-8 text-center text-red-500">{error || "Proforma no encontrada"}</div>
 
   // Transformar datos para el PDF
+
   const pdfData = proforma && cliente && vehiculo && items.length > 0
     ? {
         ...proforma,
@@ -177,7 +183,7 @@ export default function ProformaPreviewPage() {
         subtotal: Number(proforma.subtotal) || 0,
         iva: Number(proforma.iva) || 0,
         total: Number(proforma.total) || 0,
-        notaAviso: proforma.notaAviso || "",
+  notaAviso: proforma.notaAviso || proforma.nota_aviso || proforma.notaimportante || "",
         aviso: proforma.aviso || ""
       }
     : null;
@@ -207,7 +213,7 @@ export default function ProformaPreviewPage() {
         subtotal: Number(proforma.subtotal) || 0,
         iva: Number(proforma.iva) || 0,
         total: Number(proforma.total) || 0,
-        notaAviso: proforma.notaAviso || "",
+        notaAviso: proforma.notaAviso || proforma.nota_aviso || "",
         aviso: proforma.aviso || ""
       }
     : null;
@@ -247,7 +253,17 @@ export default function ProformaPreviewPage() {
                 Cancelar
               </Button>
             </div>
-            {emailResult && <div className="mt-2 text-sm text-center">{emailResult}</div>}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de resultado del envío de correo */}
+      {showResultModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-full max-w-md text-center">
+            <h2 className="text-lg font-bold mb-4">Resultado del envío</h2>
+            <div className="mb-4 text-base">{emailResult}</div>
+            <Button onClick={() => setShowResultModal(false)} autoFocus>Aceptar</Button>
           </div>
         </div>
       )}
