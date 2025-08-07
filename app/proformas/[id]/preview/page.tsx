@@ -218,7 +218,7 @@ export default function ProformaPreviewPage() {
       <div className="bg-white border-b px-4 py-3 sticky top-0 z-10">
         <div className="container flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/proformas">
+            <Link href={`/proformas/${proforma?.id || (Array.isArray(params.id) ? params.id[0] : params.id)}`}>
               <Button variant="outline" size="sm">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Volver
