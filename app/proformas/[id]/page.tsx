@@ -342,14 +342,7 @@ export default function ProformaDetailPage() {
                 Vista Previa
               </Button>
             </Link>
-            <Button variant="outline">
-              <Printer className="mr-2 h-4 w-4" />
-              Imprimir
-            </Button>
-            <Button>
-              <Download className="mr-2 h-4 w-4" />
-              Descargar PDF
-            </Button>
+            {/* Botones de Imprimir y Descargar PDF eliminados */}
           </div>
         </div>
 
