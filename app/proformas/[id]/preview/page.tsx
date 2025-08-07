@@ -25,6 +25,10 @@ export default function ProformaPreviewPage() {
   const [error, setError] = useState("")
   const pdfRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailToSend, setEmailToSend] = useState("");
+  const [sending, setSending] = useState(false);
+  const [emailResult, setEmailResult] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,7 +82,7 @@ export default function ProformaPreviewPage() {
       autoTable(pdf, {
         startY: 40 + imgHeight + 16,
         head: [["Código", "Descripción", "Cant.", "P. Unit.", "Total"]],
-        body: pdfData.items.map(item => [
+  body: pdfData.items.map((item: any) => [
           item.codigo,
           item.descripcion,
           item.cantidad,
@@ -113,24 +117,74 @@ export default function ProformaPreviewPage() {
   }
 
   // Nueva función para enviar el PDF generado por correo
-  async function handleSendEmailWithPDF(emailToSend: string, pdfRef: React.RefObject<HTMLDivElement>) {
-    const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-    if (pdfRef.current) {
-      const canvas = await html2canvas(pdfRef.current, { scale: 2 });
+  async function handleSendEmailWithPDF() {
+    setSending(true);
+    setEmailResult(null);
+    try {
+      if (!headerRef.current) {
+        setEmailResult("No se pudo generar el PDF (headerRef vacío)");
+        setSending(false);
+        return;
+      }
+      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+      const canvas = await html2canvas(headerRef.current, { scale: 2 });
       const imgData = canvas.toDataURL("image/png");
-      pdf.addImage(imgData, "PNG", 40, 40, 515, 0); // Ajusta tamaño según tu diseño
-      // Si usas autoTable, agrégalo aquí
+      const pageWidth = pdf.internal.pageSize.getWidth() - 80;
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgWidth = pageWidth;
+      const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+      pdf.addImage(imgData, "PNG", 40, 40, imgWidth, imgHeight);
+      autoTable(pdf, {
+        startY: 40 + imgHeight + 16,
+        head: [["Código", "Descripción", "Cant.", "P. Unit.", "Total"]],
+  body: pdfData.items.map((item: any) => [
+          item.codigo,
+          item.descripcion,
+          item.cantidad,
+          `$${item.precioUnitario.toFixed(2)}`,
+          `$${item.precioTotal.toFixed(2)}`
+        ]),
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [240,240,240], textColor: 30 },
+        columnStyles: { 2: { halign: 'center' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
+        theme: 'grid',
+        margin: { left: 40, right: 40 },
+        didDrawPage: (data) => {
+          const isLastPage = data.pageNumber === pdf.getNumberOfPages();
+          const y = data.cursor ? data.cursor.y + 20 : (data.table.finalY || 0) + 20;
+          if (isLastPage) {
+            pdf.setFontSize(11)
+            pdf.text(`Subtotal: $${pdfData.subtotal.toFixed(2)}`, 400, y)
+            pdf.text(`IVA (12%): $${pdfData.iva.toFixed(2)}`, 400, y + 15)
+            pdf.setFontSize(13)
+            pdf.text(`TOTAL: $${pdfData.total.toFixed(2)}`, 400, y + 35)
+            pdf.setFontSize(10)
+            pdf.text("NOTA IMPORTANTE:", 40, y)
+            pdf.text(pdfData.notaAviso, 40, y + 15, { maxWidth: 320 })
+            pdf.text("TÉRMINOS Y CONDICIONES:", 40, y + 45)
+            pdf.text(pdfData.aviso, 40, y + 60, { maxWidth: 320 })
+          }
+        }
+      });
+      const pdfBlob = pdf.output("blob");
+      const formData = new FormData();
+      formData.append("pdf", pdfBlob, `proforma-${pdfData.numero}.pdf`);
+      formData.append("email", emailToSend);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/repuestos/api_enviar_proforma.php`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEmailResult("Correo enviado correctamente.");
+      } else {
+        setEmailResult(data.error || "No se pudo enviar el correo.");
+      }
+    } catch (e) {
+      setEmailResult("Error de red o del servidor.");
+    } finally {
+      setSending(false);
     }
-    const pdfBlob = pdf.output("blob");
-    const formData = new FormData();
-    formData.append("pdf", pdfBlob, "proforma.pdf");
-    formData.append("email", emailToSend);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/repuestos/api_enviar_proforma.php`, {
-      method: "POST",
-      body: formData,
-    });
-    const data = await res.json();
-    return data;
   }
 
   if (loading) return <div className="p-8 text-center">Cargando...</div>
@@ -209,7 +263,35 @@ export default function ProformaPreviewPage() {
               </Button>
             </Link>
             <h1 className="text-lg font-semibold">Vista Previa - {pdfData.numero}</h1>
+            <Button variant="outline" size="sm" onClick={() => setShowEmailModal(true)}>
+              Enviar por correo
+            </Button>
           </div>
+      {/* Modal para enviar por correo */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
+            <h2 className="text-lg font-bold mb-2">Enviar proforma por correo</h2>
+            <input
+              type="email"
+              className="border p-2 w-full mb-2"
+              placeholder="Correo destinatario"
+              value={emailToSend}
+              onChange={e => setEmailToSend(e.target.value)}
+              disabled={sending}
+            />
+            <div className="flex gap-2 mt-2">
+              <Button onClick={handleSendEmailWithPDF} className="flex-1" disabled={sending || !emailToSend}>
+                {sending ? "Enviando..." : "Enviar"}
+              </Button>
+              <Button onClick={() => setShowEmailModal(false)} className="flex-1" variant="outline" disabled={sending}>
+                Cancelar
+              </Button>
+            </div>
+            {emailResult && <div className="mt-2 text-sm text-center">{emailResult}</div>}
+          </div>
+        </div>
+      )}
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm">
               <Printer className="mr-2 h-4 w-4" />

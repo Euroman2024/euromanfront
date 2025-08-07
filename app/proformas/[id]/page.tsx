@@ -43,10 +43,6 @@ export default function ProformaDetailPage() {
   const [savingEstado, setSavingEstado] = useState(false)
   const [estadoPendiente, setEstadoPendiente] = useState<string | null>(null)
   const [showConfirm, setShowConfirm] = useState(false)
-  const [showEmailModal, setShowEmailModal] = useState(false)
-  const [emailToSend, setEmailToSend] = useState("")
-  const [sending, setSending] = useState(false)
-  const [emailResult, setEmailResult] = useState<string | null>(null)
   const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -105,136 +101,6 @@ export default function ProformaDetailPage() {
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || ""
 
-  const handleSendEmail = async () => {
-    setSending(true)
-    setEmailResult(null)
-    try {
-      const res = await fetch(`${API_BASE_URL}/repuestos/api_enviar_proforma.php`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ proforma_id: proforma.id, email: emailToSend })
-      })
-      const data = await res.json()
-      if (data.success) {
-        setEmailResult("Correo enviado correctamente.")
-      } else {
-        setEmailResult(data.error || "No se pudo enviar el correo.")
-      }
-    } catch (e) {
-      setEmailResult("Error de red o del servidor.")
-    } finally {
-      setSending(false)
-    }
-  }
-
-  // Nueva función para enviar el PDF generado por correo
-  const handleSendEmailWithPDF = async () => {
-    setSending(true);
-    setEmailResult(null);
-    try {
-      if (!previewRef.current) {
-        console.error("previewRef.current es null");
-        setEmailResult("No se pudo generar el PDF (previewRef vacío)");
-        setSending(false);
-        return;
-      }
-      // Espera breve para asegurar renderizado completo
-      await new Promise(r => setTimeout(r, 300));
-      let canvas;
-      try {
-        canvas = await html2canvas(previewRef.current, { scale: 2 });
-      } catch (err) {
-        console.error("Error al capturar canvas:", err);
-        setEmailResult("No se pudo capturar la imagen del preview");
-        setSending(false);
-        return;
-      }
-      // Validar dimensiones del canvas
-      if (!canvas.width || !canvas.height || canvas.width <= 0 || canvas.height <= 0) {
-        console.error("Canvas con dimensiones inválidas", canvas.width, canvas.height);
-        setEmailResult("No se pudo generar la imagen: dimensiones inválidas");
-        setSending(false);
-        return;
-      }
-      // Convertir a JPEG para máxima compatibilidad
-      let imgData;
-      try {
-        imgData = canvas.toDataURL("image/jpeg", 0.95); // JPEG, calidad alta
-        // Depuración visual
-        const win = window.open();
-        if (win) {
-          win.document.write('<iframe src="' + imgData + '" frameborder="0" style="width:100vw;height:100vh;"></iframe>');
-        }
-      } catch (err) {
-        console.error("Error al convertir canvas a imagen:", err);
-        setEmailResult("No se pudo convertir el preview a imagen");
-        setSending(false);
-        return;
-      }
-      // Medidas de la página A4 en pt
-      const pageWidth = 595.28;
-      const pageHeight = 841.89;
-      // Calcula el tamaño de la imagen para que encaje en el ancho de la página
-      const imgProps = {
-        width: canvas.width * 0.75, // px a pt (aprox 96dpi a 72dpi)
-        height: canvas.height * 0.75
-      };
-      let pdfWidth = pageWidth - 80; // márgenes
-      let scale = imgProps.width > 0 ? pdfWidth / imgProps.width : 1;
-      let pdfHeight = imgProps.height * scale;
-      // Validar que los valores sean finitos y positivos
-      if (!isFinite(pdfWidth) || !isFinite(pdfHeight) || pdfWidth <= 0 || pdfHeight <= 0) {
-        console.error("Tamaño de imagen para PDF inválido", pdfWidth, pdfHeight);
-        setEmailResult("No se pudo calcular el tamaño de la imagen para el PDF");
-        setSending(false);
-        return;
-      }
-      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-      try {
-        pdf.addImage(imgData, "JPEG", 40, 40, pdfWidth, pdfHeight);
-      } catch (err) {
-        console.error("Error al agregar imagen al PDF:", err);
-        setEmailResult("No se pudo agregar la imagen al PDF (JPEG corrupto)");
-        setSending(false);
-        return;
-      }
-      const pdfBlob = pdf.output("blob");
-      if (!pdfBlob || pdfBlob.size === 0) {
-        console.error("El PDF generado está vacío");
-        setEmailResult("No se pudo generar el PDF (archivo vacío)");
-        setSending(false);
-        return;
-      }
-      const formData = new FormData();
-      formData.append("pdf", pdfBlob, "proforma.pdf");
-      formData.append("email", emailToSend);
-      for (let pair of formData.entries()) {
-        console.log(pair[0]+ ':', pair[1]);
-      }
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/repuestos/api_enviar_proforma.php`, {
-        method: "POST",
-        body: formData,
-      });
-      let data = null;
-      try {
-        data = await res.json();
-      } catch (e) {
-        setEmailResult("Respuesta inválida del servidor");
-        setSending(false);
-        return;
-      }
-      if (data.success) {
-        setEmailResult("Correo enviado correctamente.");
-      } else {
-        setEmailResult(data.error || "No se pudo enviar el correo.");
-      }
-    } catch (e) {
-      setEmailResult("Error de red o del servidor.");
-      console.error(e);
-    } finally {
-      setSending(false);
-    }
-  };
 
   // Construir el objeto pdfData de forma segura
   const pdfData = proforma && cliente && vehiculo && items.length > 0
@@ -522,37 +388,6 @@ export default function ProformaDetailPage() {
           </Card>
         </div>
 
-        {/* Botón y modal para enviar por correo */}
-        <div className="mt-8">
-          <Button onClick={() => setShowEmailModal(true)} className="w-full md:w-auto">
-            Enviar por correo
-          </Button>
-        </div>
-
-        {showEmailModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
-              <h2 className="text-lg font-bold mb-2">Enviar proforma por correo</h2>
-              <input
-                type="email"
-                className="border p-2 w-full mb-2"
-                placeholder="Correo destinatario"
-                value={emailToSend}
-                onChange={e => setEmailToSend(e.target.value)}
-                disabled={sending}
-              />
-              <div className="flex gap-2 mt-2">
-                <Button onClick={handleSendEmailWithPDF} className="flex-1" disabled={sending || !emailToSend}>
-                  {sending ? "Enviando..." : "Enviar"}
-                </Button>
-                <Button onClick={() => setShowEmailModal(false)} className="flex-1" variant="outline" disabled={sending}>
-                  Cancelar
-                </Button>
-              </div>
-              {emailResult && <div className="mt-2 text-sm text-center">{emailResult}</div>}
-            </div>
-          </div>
-        )}
 
         {/* Preview visual oculto para generación de PDF */}
         <div style={{ position: 'absolute', left: '-9999px', top: 0 }} ref={previewRef}>
