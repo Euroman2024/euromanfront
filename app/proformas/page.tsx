@@ -199,24 +199,22 @@ export default function ProformasPage() {
 
       <div className="rounded-md border">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Número</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Vehículo</TableHead>
-              <TableHead>Placa</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
           <TableBody>
             {Object.entries(proformasPorMes).map(([mes, proformasMes]) => [
-              <TableRow key={mes}>
+              <TableRow key={mes + '-mes'}>
                 <TableCell colSpan={8} className="bg-muted font-bold text-lg py-2 text-primary">
                   {mes.charAt(0).toUpperCase() + mes.slice(1)}
                 </TableCell>
+              </TableRow>,
+              <TableRow key={mes + '-cabecera'} className="bg-muted/60">
+                <TableCell className="font-semibold">Número</TableCell>
+                <TableCell className="font-semibold">Cliente</TableCell>
+                <TableCell className="font-semibold">Vehículo</TableCell>
+                <TableCell className="font-semibold">Placa</TableCell>
+                <TableCell className="font-semibold">Fecha</TableCell>
+                <TableCell className="text-right font-semibold">Total</TableCell>
+                <TableCell className="font-semibold">Estado</TableCell>
+                <TableCell className="text-right font-semibold">Acciones</TableCell>
               </TableRow>,
               ...proformasMes.map((proforma) => (
                 <TableRow key={proforma.id}>
