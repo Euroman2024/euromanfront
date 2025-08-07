@@ -215,71 +215,73 @@ export default function ProformaDetailPage() {
         <div className="grid gap-6 md:grid-cols-3">
           {/* Información principal */}
           <div className="md:col-span-2 space-y-6">
-            {/* Datos del cliente */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Información del Cliente</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-2">
-                  <div className="grid grid-cols-3 gap-4">
-                    <span className="font-medium">Nombre:</span>
-                    <span className="col-span-2">{cliente?.nombre}</span>
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Datos del cliente */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Información del Cliente</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-2">
+                    <div className="grid grid-cols-3 gap-4">
+                      <span className="font-medium">Nombre:</span>
+                      <span className="col-span-2">{cliente?.nombre}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <span className="font-medium">RUC/CI:</span>
+                      <span className="col-span-2">{cliente?.ruc}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <span className="font-medium">Dirección:</span>
+                      <span className="col-span-2">{cliente?.direccion}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <span className="font-medium">Teléfono:</span>
+                      <span className="col-span-2">{cliente?.telefono}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <span className="font-medium">Email:</span>
+                      <span className="col-span-2">{cliente?.email}</span>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <span className="font-medium">RUC/CI:</span>
-                    <span className="col-span-2">{cliente?.ruc}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <span className="font-medium">Dirección:</span>
-                    <span className="col-span-2">{cliente?.direccion}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <span className="font-medium">Teléfono:</span>
-                    <span className="col-span-2">{cliente?.telefono}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <span className="font-medium">Email:</span>
-                    <span className="col-span-2">{cliente?.email}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Datos del vehículo */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Información del Vehículo</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-2">
-                  <div className="grid grid-cols-3 gap-4">
-                    <span className="font-medium">Marca:</span>
-                    <span className="col-span-2">{vehiculo?.marca}</span>
+              {/* Datos del vehículo */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Información del Vehículo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-2">
+                    <div className="grid grid-cols-3 gap-4">
+                      <span className="font-medium">Marca:</span>
+                      <span className="col-span-2">{vehiculo?.marca}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <span className="font-medium">Modelo:</span>
+                      <span className="col-span-2">{vehiculo?.modelo}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <span className="font-medium">Año:</span>
+                      <span className="col-span-2">{vehiculo?.anio}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <span className="font-medium">Color:</span>
+                      <span className="col-span-2">{vehiculo?.color}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <span className="font-medium">Placa:</span>
+                      <span className="col-span-2">{vehiculo?.placa}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <span className="font-medium">Kilometraje:</span>
+                      <span className="col-span-2">{vehiculo?.km || vehiculo?.kilometraje || '-'} </span>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <span className="font-medium">Modelo:</span>
-                    <span className="col-span-2">{vehiculo?.modelo}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <span className="font-medium">Año:</span>
-                    <span className="col-span-2">{vehiculo?.anio}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <span className="font-medium">Color:</span>
-                    <span className="col-span-2">{vehiculo?.color}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <span className="font-medium">Placa:</span>
-                    <span className="col-span-2">{vehiculo?.placa}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <span className="font-medium">Kilometraje:</span>
-                    <span className="col-span-2">{vehiculo?.km || vehiculo?.kilometraje || '-'}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Descripción */}
             <Card>
