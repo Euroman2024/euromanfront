@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -41,6 +41,11 @@ interface ProformaData {
 }
 
 export default function EditarProformaPage() {
+  // Ref para el input activo y estado para la posición del dropdown
+  const inputCodigoRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [codigoActivoIdx, setCodigoActivoIdx] = useState<number | null>(null);
+  const [codigoBusqueda, setCodigoBusqueda] = useState("");
+  const [dropdownPos, setDropdownPos] = useState<{top: number, left: number, width: number} | null>(null);
   const router = useRouter()
   const params = useParams()
   const [formData, setFormData] = useState<any>(null)
@@ -601,36 +606,113 @@ export default function EditarProformaPage() {
                         return (
                           <TableRow key={item.id}>
                             <TableCell className="text-center font-mono text-xs border-r border-gray-300">{index + 1}</TableCell>
-                            <TableCell className="font-mono border-r border-gray-300">
+                            <TableCell className="font-mono border-r border-gray-300" style={{ position: 'relative' }}>
                               <Input
+                                ref={el => { inputCodigoRefs.current[index] = el; }}
                                 value={item.codigo}
+                                onFocus={e => {
+                                  setCodigoActivoIdx(index);
+                                  setCodigoBusqueda(item.codigo);
+                                  const rect = e.target.getBoundingClientRect();
+                                  setDropdownPos({
+                                    top: rect.bottom + window.scrollY,
+                                    left: rect.left + window.scrollX,
+                                    width: rect.width
+                                  });
+                                }}
+                                onBlur={() => {
+                                  setTimeout(() => setCodigoActivoIdx(null), 200);
+                                }}
                                 onChange={e => {
                                   const nuevoCodigo = e.target.value;
-                                  const rep = repuestos.find(r => r.codigo.toLowerCase() === nuevoCodigo.trim().toLowerCase());
-                                  if (rep) {
-                                    setItems(prev => prev.map(i => i.id === item.id ? {
-                                      ...i,
-                                      codigo: rep.codigo,
-                                      descripcion: rep.descripcion,
-                                      precioUnitario: rep.precio,
-                                      categoria: rep.categoria,
-                                      repuestoId: rep.id,
-                                      stock: rep.stock,
-                                    } : i));
-                                  } else {
-                                    setItems(prev => prev.map(i => i.id === item.id ? {
-                                      ...i,
-                                      codigo: nuevoCodigo,
-                                      repuestoId: null,
-                                      categoria: 'Manual',
-                                      stock: 0,
-                                    } : i));
+                                  setCodigoBusqueda(nuevoCodigo);
+                                  setItems(prev => prev.map(i => i.id === item.id ? {
+                                    ...i,
+                                    codigo: nuevoCodigo,
+                                  } : i));
+                                  const el = inputCodigoRefs.current[index];
+                                  if (el) {
+                                    const rect = el.getBoundingClientRect();
+                                    setDropdownPos({
+                                      top: rect.bottom + window.scrollY,
+                                      left: rect.left + window.scrollX,
+                                      width: rect.width
+                                    });
                                   }
                                 }}
                                 className="w-full h-10 font-mono font-light px-0 py-0 border-none bg-transparent focus:outline-none focus:bg-blue-50 focus:shadow-none text-left"
                                 style={{ background: 'none', border: 'none', boxShadow: 'none', outline: 'none', padding: 0, margin: 0, height: '40px', minHeight: '40px', fontSize: '14px', lineHeight: '1.2' }}
                               />
                             </TableCell>
+                  {/* Dropdown de coincidencias como portal superpuesto */}
+                  {typeof window !== 'undefined' && codigoActivoIdx !== null && codigoBusqueda.trim() !== "" && dropdownPos && (
+                    require('react-dom').createPortal(
+                      <div style={{
+                        position: 'absolute',
+                        top: dropdownPos.top,
+                        left: dropdownPos.left,
+                        minWidth: Math.max(dropdownPos.width, 220),
+                        maxWidth: 420,
+                        zIndex: 9999,
+                        background: '#fff',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '10px',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+                        maxHeight: '260px',
+                        overflowY: 'auto',
+                        marginTop: '4px',
+                        padding: '6px 0',
+                        fontSize: '15px',
+                        lineHeight: '1.35',
+                        letterSpacing: '0.01em',
+                      }}>
+                        {repuestos.filter(r =>
+                          r.codigo.toLowerCase().includes(codigoBusqueda.toLowerCase()) ||
+                          r.descripcion.toLowerCase().includes(codigoBusqueda.toLowerCase())
+                        ).slice(0, 8).map(r => (
+                          <div
+                            key={r.id}
+                            style={{
+                              padding: '10px 18px',
+                              cursor: 'pointer',
+                              borderBottom: '1px solid #f6f6f6',
+                              fontSize: '15px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '10px',
+                              transition: 'background 0.15s',
+                              whiteSpace: 'normal',
+                              wordBreak: 'break-word',
+                            }}
+                            onMouseDown={() => {
+                              setItems(prev => prev.map(i => i.id === items[codigoActivoIdx].id ? {
+                                ...i,
+                                codigo: r.codigo,
+                                descripcion: r.descripcion,
+                                precioUnitario: r.precio,
+                                categoria: r.categoria,
+                                repuestoId: r.id,
+                                stock: r.stock,
+                              } : i));
+                              setCodigoActivoIdx(null);
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = '#e6f0ff'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <span className="font-mono text-sm text-blue-700" style={{ minWidth: 80, fontWeight: 500 }}>{r.codigo}</span>
+                            <span className="text-sm text-gray-800" style={{ flex: 1 }}>{r.descripcion}</span>
+                          </div>
+                        ))}
+                        {repuestos.filter(r =>
+                          r.codigo.toLowerCase().includes(codigoBusqueda.toLowerCase()) ||
+                          r.descripcion.toLowerCase().includes(codigoBusqueda.toLowerCase())
+                        ).length === 0 && (
+                          <div style={{ padding: '12px 20px', color: '#999', fontSize: '15px', textAlign: 'center' }}>Sin coincidencias</div>
+                        )}
+                      </div>,
+                      document.body
+                    )
+                  )}
                             <TableCell className="border-r border-gray-300 min-w-[220px] w-[220px]">
                               <Input
                                 value={item.descripcion}
