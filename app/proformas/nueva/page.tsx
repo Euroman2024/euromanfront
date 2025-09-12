@@ -789,16 +789,20 @@ export default function NuevaProformaPage() {
                     position: 'absolute',
                     top: dropdownPos.top,
                     left: dropdownPos.left,
-                    width: dropdownPos.width,
+                    minWidth: Math.max(dropdownPos.width, 220),
+                    maxWidth: 420,
                     zIndex: 9999,
                     background: '#fff',
                     border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-                    maxHeight: '220px',
+                    borderRadius: '10px',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+                    maxHeight: '260px',
                     overflowY: 'auto',
                     marginTop: '4px',
-                    padding: '4px 0',
+                    padding: '6px 0',
+                    fontSize: '15px',
+                    lineHeight: '1.35',
+                    letterSpacing: '0.01em',
                   }}>
                     {repuestos.filter(r =>
                       r.codigo.toLowerCase().includes(codigoBusqueda.toLowerCase()) ||
@@ -807,14 +811,16 @@ export default function NuevaProformaPage() {
                       <div
                         key={r.id}
                         style={{
-                          padding: '8px 14px',
+                          padding: '10px 18px',
                           cursor: 'pointer',
                           borderBottom: '1px solid #f6f6f6',
-                          fontSize: '14px',
+                          fontSize: '15px',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '8px',
+                          gap: '10px',
                           transition: 'background 0.15s',
+                          whiteSpace: 'normal',
+                          wordBreak: 'break-word',
                         }}
                         onMouseDown={() => {
                           setItems(prev => prev.map(i => i.id === items[codigoActivoIdx].id ? {
@@ -828,18 +834,18 @@ export default function NuevaProformaPage() {
                           } : i));
                           setCodigoActivoIdx(null);
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
+                        onMouseEnter={e => e.currentTarget.style.background = '#e6f0ff'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
-                        <span className="font-mono text-xs text-blue-700" style={{ minWidth: 70 }}>{r.codigo}</span>
-                        <span className="text-xs text-gray-700" style={{ flex: 1 }}>{r.descripcion}</span>
+                        <span className="font-mono text-sm text-blue-700" style={{ minWidth: 80, fontWeight: 500 }}>{r.codigo}</span>
+                        <span className="text-sm text-gray-800" style={{ flex: 1 }}>{r.descripcion}</span>
                       </div>
                     ))}
                     {repuestos.filter(r =>
                       r.codigo.toLowerCase().includes(codigoBusqueda.toLowerCase()) ||
                       r.descripcion.toLowerCase().includes(codigoBusqueda.toLowerCase())
                     ).length === 0 && (
-                      <div style={{ padding: '10px 16px', color: '#999', fontSize: '14px', textAlign: 'center' }}>Sin coincidencias</div>
+                      <div style={{ padding: '12px 20px', color: '#999', fontSize: '15px', textAlign: 'center' }}>Sin coincidencias</div>
                     )}
                   </div>,
                   document.body
