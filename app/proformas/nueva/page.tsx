@@ -53,6 +53,12 @@ interface ItemProforma {
 }
 
 export default function NuevaProformaPage() {
+  // Ref para el input activo y estado para la posición del dropdown
+  const inputCodigoRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [dropdownPos, setDropdownPos] = useState<{top: number, left: number, width: number} | null>(null);
+  // Estado para el índice del input activo y su valor
+  const [codigoActivoIdx, setCodigoActivoIdx] = useState<number | null>(null);
+  const [codigoBusqueda, setCodigoBusqueda] = useState("");
   const [showAddItemForm, setShowAddItemForm] = useState(false);
   const [showManualTab, setShowManualTab] = useState(false);
   // Estados principales
@@ -234,42 +240,42 @@ export default function NuevaProformaPage() {
   // Permitir agregar item manual (sin repuesto)
   const agregarItem = () => {
     // Solo agregar si hay repuesto seleccionado (flujo repuesto)
-    if (repuestoSeleccionado) {
+    if (repuestoSeleccionado && typeof repuestoSeleccionado === 'object') {
       if (cantidad <= 0) {
         setMensaje("❌ La cantidad debe ser mayor a 0")
         return
       }
-      if (cantidad > repuestoSeleccionado.stock) {
-        setMensaje(`❌ Stock insuficiente. Disponible: ${repuestoSeleccionado.stock}`)
+      if (cantidad > (repuestoSeleccionado?.stock ?? 0)) {
+        setMensaje(`❌ Stock insuficiente. Disponible: ${repuestoSeleccionado?.stock ?? 0}`)
         return
       }
-      const itemExistente = items.find((item) => item.repuestoId === repuestoSeleccionado.id)
+      const itemExistente = items.find((item) => item.repuestoId === repuestoSeleccionado?.id)
       if (itemExistente) {
         const nuevaCantidad = itemExistente.cantidad + cantidad
-        if (nuevaCantidad > repuestoSeleccionado.stock) {
+        if (nuevaCantidad > (repuestoSeleccionado?.stock ?? 0)) {
           setMensaje(`❌ Stock insuficiente. Ya tienes ${itemExistente.cantidad}`)
           return
         }
         setItems(
           items.map((item) =>
-            item.repuestoId === repuestoSeleccionado.id ? { ...item, cantidad: nuevaCantidad } : item,
+            item.repuestoId === repuestoSeleccionado?.id ? { ...item, cantidad: nuevaCantidad } : item,
           ),
         )
       } else {
         const nuevoItem: ItemProforma = {
           id: Date.now(),
-          repuestoId: repuestoSeleccionado.id,
-          codigo: repuestoSeleccionado.codigo,
-          descripcion: repuestoSeleccionado.descripcion,
+          repuestoId: repuestoSeleccionado?.id ?? null,
+          codigo: repuestoSeleccionado?.codigo ?? '',
+          descripcion: repuestoSeleccionado?.descripcion ?? '',
           cantidad: cantidad,
-          precio: repuestoSeleccionado.precio,
-          categoria: repuestoSeleccionado.categoria,
-          stockDisponible: repuestoSeleccionado.stock,
+          precio: repuestoSeleccionado?.precio ?? 0,
+          categoria: repuestoSeleccionado?.categoria ?? '',
+          stockDisponible: repuestoSeleccionado?.stock ?? 0,
         }
         setItems([...items, nuevoItem])
       }
       limpiarSeleccion()
-      setMensaje(`✅ ${repuestoSeleccionado.descripcion} agregado`)
+      setMensaje(`✅ ${repuestoSeleccionado?.descripcion ?? ''} agregado`)
       setTimeout(() => setMensaje(""), 3000)
       return
     }
@@ -684,45 +690,40 @@ export default function NuevaProformaPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      items.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-mono border-r border-gray-300">
+                      items.map((item, idx) => (
+                        <TableRow key={item.id} style={{ position: 'relative' }}>
+                          <TableCell className="font-mono border-r border-gray-300" style={{ position: 'relative' }}>
                             <Input
+                              ref={el => { inputCodigoRefs.current[idx] = el; }}
                               value={item.codigo}
+                              onFocus={e => {
+                                setCodigoActivoIdx(idx);
+                                setCodigoBusqueda(item.codigo);
+                                const rect = e.target.getBoundingClientRect();
+                                setDropdownPos({
+                                  top: rect.bottom + window.scrollY,
+                                  left: rect.left + window.scrollX,
+                                  width: rect.width
+                                });
+                              }}
+                              onBlur={() => {
+                                setTimeout(() => setCodigoActivoIdx(null), 200);
+                              }}
                               onChange={e => {
                                 const nuevoCodigo = e.target.value;
-                                if (!Array.isArray(repuestos) || repuestos.length === 0) {
-                                  setItems(prev => prev.map(i => i.id === item.id ? {
-                                    ...i,
-                                    codigo: nuevoCodigo,
-                                    repuestoId: null,
-                                    categoria: 'Manual',
-                                    stockDisponible: 0,
-                                  } : i));
-                                  return;
-                                }
-                                let rep = null;
-                                if (Array.isArray(repuestos)) {
-                                  rep = repuestos.find(r => r.codigo && r.codigo.toLowerCase() === nuevoCodigo.trim().toLowerCase());
-                                }
-                                if (rep) {
-                                  setItems(prev => prev.map(i => i.id === item.id ? {
-                                    ...i,
-                                    codigo: nuevoCodigo,
-                                    descripcion: rep.descripcion,
-                                    precio: rep.precio,
-                                    categoria: rep.categoria,
-                                    repuestoId: rep.id,
-                                    stockDisponible: rep.stock,
-                                  } : i));
-                                } else {
-                                  setItems(prev => prev.map(i => i.id === item.id ? {
-                                    ...i,
-                                    codigo: nuevoCodigo,
-                                    repuestoId: null,
-                                    categoria: 'Manual',
-                                    stockDisponible: 0,
-                                  } : i));
+                                setCodigoBusqueda(nuevoCodigo);
+                                setItems(prev => prev.map(i => i.id === item.id ? {
+                                  ...i,
+                                  codigo: nuevoCodigo,
+                                } : i));
+                                const el = inputCodigoRefs.current[idx];
+                                if (el) {
+                                  const rect = el.getBoundingClientRect();
+                                  setDropdownPos({
+                                    top: rect.bottom + window.scrollY,
+                                    left: rect.left + window.scrollX,
+                                    width: rect.width
+                                  });
                                 }
                               }}
                               className="w-full h-10 font-mono font-light px-0 py-0 border-none bg-transparent focus:outline-none focus:bg-blue-50 focus:shadow-none text-left"
@@ -781,6 +782,69 @@ export default function NuevaProformaPage() {
                   </TableBody>
                 </Table>
               </div>
+              {/* Dropdown de coincidencias como portal superpuesto */}
+              {typeof window !== 'undefined' && codigoActivoIdx !== null && codigoBusqueda.trim() !== "" && dropdownPos && (
+                require('react-dom').createPortal(
+                  <div style={{
+                    position: 'absolute',
+                    top: dropdownPos.top,
+                    left: dropdownPos.left,
+                    width: dropdownPos.width,
+                    zIndex: 9999,
+                    background: '#fff',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                    maxHeight: '220px',
+                    overflowY: 'auto',
+                    marginTop: '4px',
+                    padding: '4px 0',
+                  }}>
+                    {repuestos.filter(r =>
+                      r.codigo.toLowerCase().includes(codigoBusqueda.toLowerCase()) ||
+                      r.descripcion.toLowerCase().includes(codigoBusqueda.toLowerCase())
+                    ).slice(0, 8).map(r => (
+                      <div
+                        key={r.id}
+                        style={{
+                          padding: '8px 14px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f6f6f6',
+                          fontSize: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseDown={() => {
+                          setItems(prev => prev.map(i => i.id === items[codigoActivoIdx].id ? {
+                            ...i,
+                            codigo: r.codigo,
+                            descripcion: r.descripcion,
+                            precio: r.precio,
+                            categoria: r.categoria,
+                            repuestoId: r.id,
+                            stockDisponible: r.stock,
+                          } : i));
+                          setCodigoActivoIdx(null);
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span className="font-mono text-xs text-blue-700" style={{ minWidth: 70 }}>{r.codigo}</span>
+                        <span className="text-xs text-gray-700" style={{ flex: 1 }}>{r.descripcion}</span>
+                      </div>
+                    ))}
+                    {repuestos.filter(r =>
+                      r.codigo.toLowerCase().includes(codigoBusqueda.toLowerCase()) ||
+                      r.descripcion.toLowerCase().includes(codigoBusqueda.toLowerCase())
+                    ).length === 0 && (
+                      <div style={{ padding: '10px 16px', color: '#999', fontSize: '14px', textAlign: 'center' }}>Sin coincidencias</div>
+                    )}
+                  </div>,
+                  document.body
+                )
+              )}
             </CardContent>
           </Card>
         </div>
