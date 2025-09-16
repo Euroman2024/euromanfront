@@ -135,7 +135,7 @@ export default function ProformaPreviewPage() {
       const formData = new FormData();
       formData.append("pdf", pdfBlob, `proforma_${pdfDataForDownload.numero || "documento"}.pdf`);
       formData.append("email", emailToSend);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/repuestos/api_enviar_proforma.php`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/proformas`, {
         method: "POST",
         body: formData,
       });

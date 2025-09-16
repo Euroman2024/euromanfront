@@ -19,86 +19,102 @@ async function apiRequest(path: string, options: { method?: string; body?: any; 
 
 // CRUD Clientes
 export const apiClientes = {
-  list: () => apiRequest('repuestos/api_clientes.php'),
-  get: (id: number|string) => apiRequest(`repuestos/api_clientes.php?id=${id}`),
-  create: (data: any) => apiRequest('repuestos/api_clientes.php', { method: 'POST', body: JSON.stringify(data) }),
+  list: async () => {
+    const res = await apiRequest('clientes');
+    return res.data || [];
+  },
+  get: (id: number|string) => apiRequest(`clientes?id=${id}`),
+  create: (data: any) => apiRequest('clientes', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number|string, data: any) => {
     const params = new URLSearchParams();
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) params.append(key, value as string)
     });
-    return apiRequest(`repuestos/api_clientes.php?id=${id}`, { method: 'PUT', body: params });
+    return apiRequest(`clientes?id=${id}`, { method: 'PUT', body: params });
   },
-  delete: (id: number|string) => apiRequest(`repuestos/api_clientes.php?id=${id}`, { method: 'DELETE' }),
+  delete: (id: number|string) => apiRequest(`clientes?id=${id}`, { method: 'DELETE' }),
 };
 
 // CRUD Entidades
 export const apiEntidades = {
-  list: () => apiRequest('repuestos/api_entidades.php'),
-  get: (id: number|string) => apiRequest(`repuestos/api_entidades.php?id=${id}`),
+  list: async () => {
+    const res = await apiRequest('entidades');
+    return res.data || [];
+  },
+  get: (id: number|string) => apiRequest(`entidades?id=${id}`),
   create: (data: any) => {
     const params = new URLSearchParams();
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) params.append(key, value as string)
     });
-    return apiRequest('repuestos/api_entidades.php', { method: 'POST', body: params });
+    return apiRequest('entidades', { method: 'POST', body: params });
   },
   update: (id: number|string, data: any) => {
     const params = new URLSearchParams();
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) params.append(key, value as string)
     });
-    return apiRequest(`repuestos/api_entidades.php?id=${id}`, { method: 'PUT', body: params });
+    return apiRequest(`entidades?id=${id}`, { method: 'PUT', body: params });
   },
-  delete: (id: number|string) => apiRequest(`repuestos/api_entidades.php?id=${id}`, { method: 'DELETE' }),
+  delete: (id: number|string) => apiRequest(`entidades?id=${id}`, { method: 'DELETE' }),
 };
 
 // CRUD Vehículos
 export const apiVehiculos = {
-  list: () => apiRequest('repuestos/api_vehiculos.php'),
-  get: (id: number|string) => apiRequest(`repuestos/api_vehiculos.php?id=${id}`),
-  create: (data: any) => apiRequest('repuestos/api_vehiculos.php', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: number|string, data: any) => apiRequest(`repuestos/api_vehiculos.php?id=${id}`, { method: 'PUT', body: data }),
-  delete: (id: number|string) => apiRequest(`repuestos/api_vehiculos.php?id=${id}`, { method: 'DELETE' }),
+  list: async () => {
+    const res = await apiRequest('vehiculos');
+    return res.data || [];
+  },
+  get: (id: number|string) => apiRequest(`vehiculos?id=${id}`),
+  create: (data: any) => apiRequest('vehiculos', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: number|string, data: any) => apiRequest(`vehiculos?id=${id}`, { method: 'PUT', body: data }),
+  delete: (id: number|string) => apiRequest(`vehiculos?id=${id}`, { method: 'DELETE' }),
 };
 
 // CRUD Proformas
 export const apiProformas = {
-  list: () => apiRequest('repuestos/api_proformas.php'),
-  get: (id: number|string) => apiRequest(`repuestos/api_proformas.php?id=${id}`),
+  list: async () => {
+    const res = await apiRequest('proformas');
+    return res.data || [];
+  },
+  get: (id: number|string) => apiRequest(`proformas?id=${id}`),
   create: (data: any) => {
     const params = new URLSearchParams();
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) params.append(key, value as string)
     });
-    return apiRequest('repuestos/api_proformas.php', { method: 'POST', body: params });
+    return apiRequest('proformas', { method: 'POST', body: params });
   },
   update: (id: number|string, data: any) => {
     const params = new URLSearchParams();
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) params.append(key, value as string)
     });
-    return apiRequest(`repuestos/api_proformas.php?id=${id}`, { method: 'PUT', body: params });
+    return apiRequest(`proformas?id=${id}`, { method: 'PUT', body: params });
   },
-  delete: (id: number|string) => apiRequest(`repuestos/api_proformas.php?id=${id}`, { method: 'DELETE' }),
+  delete: (id: number|string) => apiRequest(`proformas?id=${id}`, { method: 'DELETE' }),
 };
 
 // CRUD Proforma Items
 export const apiProformaItems = {
-  list: (proforma_id?: number|string) => proforma_id
-    ? apiRequest(`repuestos/api_proforma_items.php?proforma_id=${proforma_id}`)
-    : apiRequest('repuestos/api_proforma_items.php'),
-  get: (id: number|string) => apiRequest(`repuestos/api_proforma_items.php?id=${id}`),
-  create: (data: any) => apiRequest('repuestos/api_proforma_items.php', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: number|string, data: any) => apiRequest(`repuestos/api_proforma_items.php?id=${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id: number|string) => apiRequest(`repuestos/api_proforma_items.php?id=${id}`, { method: 'DELETE' }),
+  list: async (proforma_id?: number|string) => {
+    const res = await apiRequest(proforma_id ? `proforma-items?proforma_id=${proforma_id}` : 'proforma-items');
+    return res.data || [];
+  },
+  get: (id: number|string) => apiRequest(`proforma-items?id=${id}`),
+  create: (data: any) => apiRequest('proforma-items', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: number|string, data: any) => apiRequest(`proforma-items?id=${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: number|string) => apiRequest(`proforma-items?id=${id}`, { method: 'DELETE' }),
 };
 
 // CRUD Repuestos
 export const apiRepuestos = {
-  list: () => apiRequest('repuestos/api_repuestos.php'),
-  get: (id: number|string) => apiRequest(`repuestos/api_repuestos.php?id=${id}`),
-  create: (data: any) => apiRequest('repuestos/api_repuestos.php', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: number|string, data: any) => apiRequest(`repuestos/api_repuestos.php?id=${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id: number|string) => apiRequest(`repuestos/api_repuestos.php?id=${id}`, { method: 'DELETE' }),
+  list: async () => {
+    const res = await apiRequest('repuestos');
+    return res.data || [];
+  },
+  get: (id: number|string) => apiRequest(`repuestos?id=${id}`),
+  create: (data: any) => apiRequest('repuestos', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: number|string, data: any) => apiRequest(`repuestos?id=${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: number|string) => apiRequest(`repuestos?id=${id}`, { method: 'DELETE' }),
 };
