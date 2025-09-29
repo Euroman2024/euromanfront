@@ -3,10 +3,16 @@ const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "htt
 
 // Helper para requests genéricos
 async function apiRequest(path: string, options: { method?: string; body?: any; } = {}) {
-  let headers = { 'Content-Type': 'application/json' };
+  let headers: Record<string, string> = { 
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'any'
+  };
   let body = options.body;
   if (body instanceof URLSearchParams) {
-    headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    headers = { 
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'ngrok-skip-browser-warning': 'any'
+    };
   }
   const res = await fetch(`${BASE_URL}/${path}`, {
     headers,
