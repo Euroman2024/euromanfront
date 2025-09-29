@@ -1,5 +1,7 @@
 // Utilidades para consumir los endpoints del backend PHP
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "http://192.168.100.112/proformas/euroman/";
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "http://192.168.100.112/proformas/euroman";
+console.log('Environment NEXT_PUBLIC_BACKEND_URL:', process.env.NEXT_PUBLIC_BACKEND_URL);
+console.log('Final BASE_URL:', BASE_URL);
 
 // Helper para requests genéricos
 async function apiRequest(path: string, options: { method?: string; body?: any; } = {}) {
@@ -14,7 +16,12 @@ async function apiRequest(path: string, options: { method?: string; body?: any; 
       'ngrok-skip-browser-warning': 'any'
     };
   }
-  const res = await fetch(`${BASE_URL}/${path}`, {
+  
+  const fullUrl = `${BASE_URL}/${path}`;
+  console.log('API Request URL:', fullUrl); // Debug log
+  console.log('BASE_URL:', BASE_URL); // Debug log
+  
+  const res = await fetch(fullUrl, {
     headers,
     ...options,
     body,
