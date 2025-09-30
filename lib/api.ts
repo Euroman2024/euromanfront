@@ -20,6 +20,7 @@ async function apiRequest(path: string, options: { method?: string; body?: any; 
   const fullUrl = `${BASE_URL}/${path}`;
   console.log('API Request URL:', fullUrl); // Debug log
   console.log('BASE_URL:', BASE_URL); // Debug log
+  console.log('Path received:', path); // Debug log
   
   const res = await fetch(fullUrl, {
     headers,
