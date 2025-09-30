@@ -1,5 +1,5 @@
 // Utilidades para consumir los endpoints del backend PHP
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "http://192.168.100.112/proformas/euroman";
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "https://untallied-jacki-wonderless.ngrok-free.dev/proformas/euroman";
 console.log('Environment NEXT_PUBLIC_BACKEND_URL:', process.env.NEXT_PUBLIC_BACKEND_URL);
 console.log('Final BASE_URL:', BASE_URL);
 
