@@ -62,7 +62,7 @@ function getStockStatus(stock: number, stockMinimo: number) {
   }
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") + "/repuestos/api_repuestos.php"
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") + "/repuestos"
 
 export default function RepuestosPage() {
   // Login overlay state

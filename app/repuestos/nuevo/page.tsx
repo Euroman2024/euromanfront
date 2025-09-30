@@ -39,7 +39,7 @@ const categorias = [
   "Servicios",
 ]
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") + "/repuestos/api_repuestos.php"
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") + "/repuestos"
 
 export default function NuevoRepuestoPage() {
   const router = useRouter()
