@@ -105,7 +105,11 @@ export default function RepuestosPage() {
       params.append("offset", String((pagina - 1) * limite))
       const url = `${BACKEND_URL}?${params.toString()}`
       try {
-        const res = await fetch(url)
+        const res = await fetch(url, {
+          headers: {
+            'ngrok-skip-browser-warning': 'any'
+          }
+        })
         const data = await res.json()
         if ((data && data.code === 403) || data.error) {
           setBackendError(data.error || 'Error desconocido del backend');

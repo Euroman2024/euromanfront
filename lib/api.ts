@@ -1,17 +1,30 @@
-// Utilidades para consumir los endpoints del backend Node.js
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "http://localhost:3010/api";
+
+// Utilidades para consumir los endpoints del backend PHP
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "https://untallied-jacki-wonderless.ngrok-free.dev/proformas/euroman";
+console.log('Environment NEXT_PUBLIC_BACKEND_URL:', process.env.NEXT_PUBLIC_BACKEND_URL);
+console.log('Final BASE_URL:', BASE_URL);
 
 // Helper para requests genéricos
 async function apiRequest(path: string, options: { method?: string; body?: any; } = {}) {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  let headers: Record<string, string> = { 
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'any'
+  };
   let body = options.body;
-  
-  // Si el body es un objeto, convertirlo a JSON
-  if (body && typeof body === 'object' && !(body instanceof FormData) && !(body instanceof URLSearchParams)) {
-    body = JSON.stringify(body);
+  if (body instanceof URLSearchParams) {
+    headers = { 
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'ngrok-skip-browser-warning': 'any'
+    };
   }
   
-  const res = await fetch(`${BASE_URL}/${path}`, {
+  const fullUrl = `${BASE_URL}/${path}`;
+  console.log('API Request URL:', fullUrl); // Debug log
+  console.log('BASE_URL:', BASE_URL); // Debug log
+  console.log('Path received:', path); // Debug log
+  
+  const res = await fetch(fullUrl, {
+
     headers,
     ...options,
     body,

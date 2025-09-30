@@ -137,6 +137,9 @@ export default function ProformaPreviewPage() {
       formData.append("email", emailToSend);
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/proformas`, {
         method: "POST",
+        headers: {
+          'ngrok-skip-browser-warning': 'any'
+        },
         body: formData,
       });
       const data = await res.json();
